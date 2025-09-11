@@ -117,6 +117,8 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+
+<!-- Your orb script -->
 <script>
 const container = document.getElementById('sphere-container');
 const scene = new THREE.Scene();
@@ -135,7 +137,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
-// Shiny material (no reflections)
+// Shiny material
 const material = new THREE.MeshStandardMaterial({
   color: 0xcccccc, // chrome-like gray
   metalness: 1,
@@ -161,5 +163,6 @@ function animate() {
 }
 animate();
 </script>
+
 </body>
 </html>

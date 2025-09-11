@@ -118,13 +118,12 @@
   </script>
 
 <script type="module">
-import * as THREE from "https://unpkg.com/three@0.161.0/build/three.module.js";
-import { PMREMGenerator } from "https://unpkg.com/three@0.161.0/examples/jsm/pmrem/PMREMGenerator.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
+import { RoomEnvironment } from "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/environments/RoomEnvironment.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("sphere-container");
 
-  // Scene / camera / renderer
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
   camera.position.z = 3;
@@ -136,47 +135,30 @@ document.addEventListener("DOMContentLoaded", () => {
   renderer.setSize(300, 300);
   container.appendChild(renderer.domElement);
 
-  // PMREM to process env maps
-  const pmrem = new PMREMGenerator(renderer);
-  pmrem.compileCubemapShader();
+  // Use built-in RoomEnvironment instead of external cube maps
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-  // Load neutral sky cube (no buildings)
-  const base = "https://threejs.org/examples/textures/cube/skyboxsun25deg/";
-  const urls = ["px.jpg","nx.jpg","py.jpg","ny.jpg","pz.jpg","nz.jpg"].map(f => base + f);
-
-  new THREE.CubeTextureLoader().load(urls, (cube) => {
-    cube.colorSpace = THREE.SRGBColorSpace;
-    const envRT = pmrem.fromCubemap(cube);
-    const envMap = envRT.texture;
-
-    scene.environment = envMap;
-    // comment this line out if you want to keep your dark dungeon bg:
-    scene.background = envMap;
-
-    // Chrome material
-    const material = new THREE.MeshStandardMaterial({
-      envMap: envMap,
-      envMapIntensity: 1.8,
-      metalness: 1,
-      roughness: 0.06
-    });
-
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), material);
-    scene.add(sphere);
-
-    // Lights (soft fill only)
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.8));
-
-    // Animate
-    function animate() {
-      requestAnimationFrame(animate);
-      sphere.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-    animate();
-  }, undefined, (err) => {
-    console.error("Cube load failed", err);
+  // Chrome material
+  const material = new THREE.MeshStandardMaterial({
+    metalness: 1,
+    roughness: 0.05
   });
+
+  const geometry = new THREE.SphereGeometry(1, 64, 64);
+  const sphere = new THREE.Mesh(geometry, material);
+  scene.add(sphere);
+
+  // A little fill light
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
+
+  // Animate
+  function animate() {
+    requestAnimationFrame(animate);
+    sphere.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
 });
 </script>
 

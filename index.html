@@ -18,15 +18,30 @@
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
-      margin: 0;
-      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: 
-        repeating-linear-gradient(to bottom, var(--stone) 0 30px, var(--mortar) 30px 32px),
-        repeating-linear-gradient(to right, transparent 0 62px, rgba(0,0,0,.2) 62px 64px),
-        var(--bg);
-      image-rendering: pixelated;
-      color: #ffd7d7;
-    }
+  margin: 0;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  color: #ffd7d7;
+
+  /* animated radial “blood” glow */
+  background: radial-gradient(circle at 50% 30%, #1b0a0a 0%, #0a0a0d 60%, #07070a 100%);
+  animation: cryptPulse 8s ease-in-out infinite alternate;
+}
+
+/* fine film grain overlay (tiny embedded noise texture) */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: .12;
+  mix-blend-mode: normal;
+  background-size: 160px 160px;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAB9Zf2mAAAARUlEQVRYhe3OsQkAQAwEwXr/2bJrQ1Kq6xgIYlqfD1mY5yM3yLJ1m0Gv9wz8VQ9w0wQ6FjB7eYB7Y1j4QvBqkqg0G4v6qv2Zg0N7m2qgHk4yXz2v3wB4q2wG54e4qQAAAABJRU5ErkJggg==");
+}
+
+@keyframes cryptPulse {
+  0%   { background: radial-gradient(circle at 50% 30%, #1b0a0a 0%, #0a0a0d 60%, #07070a 100%); }
+  100% { background: radial-gradient(circle at 50% 30%, #320000 0%, #0a0a0d 60%, #07070a 100%); }
+}
 
     #sphere-container {
     width: 300px;
@@ -134,6 +149,15 @@
 }
 </script>
 
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+
 <script type="module">
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -148,38 +172,44 @@ camera.position.z = 3;
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.25;
+renderer.toneMappingExposure = 1.35;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0x000000, 0);
 renderer.setSize(300, 300);
 container.appendChild(renderer.domElement);
 
-// Proper reflective environment (no external files)
+// Proper reflective environment (no external images)
 const pmrem = new THREE.PMREMGenerator(renderer);
 const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environment = envMap;
 
-// ⚙️ Chrome-y material
+// Ultra-chrome material
 const material = new THREE.MeshStandardMaterial({
-  color: 0xeeeeee,          // light base so reflections pop
+  color: 0xffffff,
   metalness: 1,
-  roughness: 0.03,          // smoother = shinier
-  envMapIntensity: 2.2      // crank reflections
+  roughness: 0.0,     // mirror-like
+  envMapIntensity: 3.0
 });
 
 const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
 scene.add(sphere);
 
-// Soft fill (env does most of the work)
-scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.8));
+// Red + white lights for dramatic specular glints
+const red = new THREE.PointLight(0xff3a3a, 1.6);
+red.position.set(3.5, 4.5, 4.0);
+scene.add(red);
 
-// 🔁 Animate (faster + slight tilt so it’s obvious)
-let t = 0;
+const white = new THREE.PointLight(0xffffff, 1.0);
+white.position.set(-4.0, -3.0, 3.5);
+scene.add(white);
+
+// Animate: steady spin + subtle wobble so reflections move clearly
 function animate() {
   requestAnimationFrame(animate);
-  t += 0.01;
-  sphere.rotation.y += 0.025;         // speed up spin
-  sphere.rotation.x = Math.sin(t) * 0.08; // subtle wobble for life
+  const t = performance.now() * 0.001;
+  sphere.rotation.y = t * 1.0;              // clear spin
+  sphere.rotation.x = Math.sin(t * 0.8) * 0.15;
+  sphere.rotation.z = Math.cos(t * 0.6) * 0.08;
   renderer.render(scene, camera);
 }
 animate();

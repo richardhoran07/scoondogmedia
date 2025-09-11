@@ -28,6 +28,12 @@
       color: #ffd7d7;
     }
 
+    #sphere-container {
+    width: 300px;
+    height: 300px;
+    margin: 2rem auto;
+  }
+
     .wrap { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem 4rem; position: relative; z-index: 2; }
 
     /* Gothic Header (letters squirm, box stays still) */
@@ -111,17 +117,13 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
 <script>
 const container = document.getElementById('sphere-container');
-container.style.width = "250px";
-container.style.height = "250px";
-container.style.margin = "2rem auto";
-
-// Scene
 const scene = new THREE.Scene();
 
 // Camera
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
 camera.position.z = 3;
 
 // Renderer
@@ -129,51 +131,41 @@ const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
-// Environment map (simple gradient cube texture)
-const size = 64;
-const data = new Uint8Array(size*size*3);
-for (let i=0; i<data.length; i+=3) {
-  const shade = Math.floor(200 * Math.random() + 55);
-  data[i] = shade; data[i+1] = shade; data[i+2] = shade;
-}
-const texture = new THREE.DataTexture(data, size, size, THREE.RGBFormat);
-texture.needsUpdate = true;
-const cubeTex = new THREE.CubeTexture([texture,texture,texture,texture,texture,texture]);
-cubeTex.needsUpdate = true;
+// Load environment map (replace these with dungeon-texture images)
+const loader = new THREE.CubeTextureLoader();
+const envMap = loader.setPath('images/env/').load([
+  'px.jpg', 'nx.jpg',
+  'py.jpg', 'ny.jpg',
+  'pz.jpg', 'nz.jpg'
+]);
+
+scene.background = null; // keep page background visible
 
 // Material
 const material = new THREE.MeshStandardMaterial({
-  envMap: cubeTex,
+  envMap: envMap,
   metalness: 1,
-  roughness: 0.1
+  roughness: 0.05
 });
 
-// Sphere geometry
+// Sphere
 const geometry = new THREE.SphereGeometry(1, 64, 64);
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
 
-// Light
+// Lights
 const light = new THREE.PointLight(0xffffff, 1.5);
 light.position.set(5,5,5);
 scene.add(light);
 scene.add(new THREE.AmbientLight(0x666666));
 
 // Animate
-function animate() {
+function animate(){
   requestAnimationFrame(animate);
   sphere.rotation.y += 0.01;
   renderer.render(scene, camera);
 }
 animate();
-
-// Handle resize
-window.addEventListener('resize', ()=>{
-  const size = container.clientWidth;
-  renderer.setSize(size, size);
-  camera.aspect = 1;
-  camera.updateProjectionMatrix();
-});
 </script>
 </body>
 </html>

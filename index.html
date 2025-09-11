@@ -118,8 +118,8 @@
   </script>
 
 <script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
-import { PMREMGenerator } from "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/pmrem/PMREMGenerator.js";
+import * as THREE from "https://unpkg.com/three@0.161.0/build/three.module.js";
+import { PMREMGenerator } from "https://unpkg.com/three@0.161.0/examples/jsm/pmrem/PMREMGenerator.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("sphere-container");
@@ -132,29 +132,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
-  renderer.outputColorSpace = THREE.SRGBColorSpace; // r161
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setSize(300, 300);
   container.appendChild(renderer.domElement);
 
-  // PMREM to make the env usable for MeshStandardMaterial
+  // PMREM to process env maps
   const pmrem = new PMREMGenerator(renderer);
   pmrem.compileCubemapShader();
 
-  // Load a neutral sky cube (no buildings)
+  // Load neutral sky cube (no buildings)
   const base = "https://threejs.org/examples/textures/cube/skyboxsun25deg/";
   const urls = ["px.jpg","nx.jpg","py.jpg","ny.jpg","pz.jpg","nz.jpg"].map(f => base + f);
 
   new THREE.CubeTextureLoader().load(urls, (cube) => {
-    // mark color space and PMREM-filter it
     cube.colorSpace = THREE.SRGBColorSpace;
     const envRT = pmrem.fromCubemap(cube);
     const envMap = envRT.texture;
 
-    // set both environment and (temporarily) background so you can SEE it's loaded
     scene.environment = envMap;
-    scene.background = envMap; // <-- comment this out later if you want your dark wall back
+    // comment this line out if you want to keep your dark dungeon bg:
+    scene.background = envMap;
 
-    // build the sphere AFTER env ready
+    // Chrome material
     const material = new THREE.MeshStandardMaterial({
       envMap: envMap,
       envMapIntensity: 1.8,
@@ -165,13 +164,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), material);
     scene.add(sphere);
 
-    // lights (subtle, env does the heavy lifting)
+    // Lights (soft fill only)
     scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.8));
-    const key = new THREE.PointLight(0xffffff, 0.8);
-    key.position.set(4, 4, 5);
-    scene.add(key);
 
-    // animate
+    // Animate
     function animate() {
       requestAnimationFrame(animate);
       sphere.rotation.y += 0.01;

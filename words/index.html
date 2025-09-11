@@ -16,7 +16,7 @@
 </style>
 </head><body>
 <main>
-  <a class="back" href="../">← Back</a>
+  <a class="back" href="#" onclick="return goHome(event)">← Back</a>
   <h1>Words</h1>
 
   <ul id="list"></ul>
@@ -38,6 +38,21 @@ for (const {file, title} of FILES){
   a.target = '_blank'; // show in browser
   li.appendChild(a);
   list.appendChild(li);
+}
+</script>
+<script>
+function goHome(e){
+  if(e) e.preventDefault();
+  // Works for both user sites and project sites
+  // /username/repo/... -> /username/repo/
+  const parts = location.pathname.split('/').filter(Boolean);
+  let base = '/';
+  if (parts.length >= 2) {
+    // username.github.io/<repo>/...  
+    base = '/' + parts[0] + '/' + parts[1] + '/';
+  }
+  location.href = base;
+  return false;
 }
 </script>
 </body></html>

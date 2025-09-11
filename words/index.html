@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Words — SCOONDOG156</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0d;--ink:#d61a1a;--stone:#121217;--mortar:#0c0c10}
+  body{margin:0;background:
+    repeating-linear-gradient(to bottom,var(--stone)0 30px,var(--mortar)30px 32px),
+    repeating-linear-gradient(to right,transparent 0 62px,rgba(0,0,0,.2)62px 64px),var(--bg);
+    color:#ffd7d7;font-family:system-ui,ui-sans-serif}
+  main{max-width:800px;margin:0 auto;padding:1rem 1rem 3rem}
+  h1{font-family:'UnifrakturCook',cursive;color:var(--ink);text-align:center;margin:1rem 0}
+  ul{list-style:none;padding:0} li{margin:.4rem 0}
+  a{color:#ffd7d7;text-decoration:none;border-bottom:2px solid var(--ink)}
+  .back{display:inline-block;color:#ffd7d7;text-decoration:none;border:2px solid var(--ink);padding:.35rem .6rem}
+</style>
+</head><body>
+<main>
+  <a class="back" href="/">← Back</a>
+  <h1>Words</h1>
+
+  <ul id="list"></ul>
+</main>
+
+<script>
+// Put your .txt files into /words/txt/ and list them here
+const FILES = [
+  // {file:'poem1.txt', title:'Thresholds'},
+  // {file:'field-notes.txt', title:'Field Notes'},
+];
+
+const list = document.getElementById('list');
+for (const {file, title} of FILES){
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.href = `./txt/${encodeURIComponent(file)}`;
+  a.textContent = title || file;
+  a.target = '_blank'; // show in browser
+  li.appendChild(a);
+  list.appendChild(li);
+}
+</script>
+</body></html>

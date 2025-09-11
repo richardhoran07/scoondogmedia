@@ -135,9 +135,13 @@ document.addEventListener("DOMContentLoaded", () => {
   renderer.setSize(300, 300);
   container.appendChild(renderer.domElement);
 
-  // Use built-in RoomEnvironment instead of external cube maps
+  // PMREMGenerator is included in core THREE now
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  pmrem.compileEquirectangularShader();
+
+  // Use RoomEnvironment (bundled in examples) as reflection env
+  const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environment = envMap;
 
   // Chrome material
   const material = new THREE.MeshStandardMaterial({
@@ -149,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
-  // A little fill light
+  // Add some light
   scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
 
   // Animate

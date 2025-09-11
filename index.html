@@ -83,7 +83,25 @@
 </head>
 <body>
   <main class="wrap">
-    <h1 class="marquee">RJH</h1>
+    <div class="sphere"></div>
+
+<style>
+.sphere {
+  width: 200px; height: 200px;
+  margin: 2rem auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff, #aaa, #222 80%);
+  box-shadow: inset -20px -20px 40px rgba(0,0,0,.7),
+              inset 20px 20px 40px rgba(255,255,255,.3),
+              0 0 30px rgba(255,255,255,.2);
+  animation: spin 8s linear infinite;
+  transform-style: preserve-3d;
+}
+@keyframes spin {
+  from { transform: rotateY(0deg) rotateX(15deg); }
+  to   { transform: rotateY(360deg) rotateX(15deg); }
+}
+</style>
 
     <section class="panels">
       <div class="panel" id="words">
@@ -101,7 +119,7 @@
     </section>
 
     <div class="ticker-wrap">
-      <div class="ticker">Wid great pleasure we present to yuh di finest display a creative genius eva recorded inna di history a man</div>
+      <div class="ticker">Well Now I Hope You Are Enjoying Yourself</div>
     </div>
 
     <footer>© <span id="year"></span> SCOONDOG156</footer>

@@ -122,7 +122,6 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.m
 
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("sphere-container");
-  if (!container) { console.error("sphere-container missing"); return; }
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -130,44 +129,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x000000, 0);  // transparent background
-  const size = Math.min(container.clientWidth, container.clientHeight) || 300;
+  renderer.setClearColor(0x000000, 0);
+  const size = 300;
   renderer.setSize(size, size);
   container.appendChild(renderer.domElement);
 
+  // Create a simple gradient cube env map
+  const loader = new THREE.CubeTextureLoader();
+  const envMap = loader.load([
+    "https://threejs.org/examples/textures/cube/Bridge2/posx.jpg",
+    "https://threejs.org/examples/textures/cube/Bridge2/negx.jpg",
+    "https://threejs.org/examples/textures/cube/Bridge2/posy.jpg",
+    "https://threejs.org/examples/textures/cube/Bridge2/negy.jpg",
+    "https://threejs.org/examples/textures/cube/Bridge2/posz.jpg",
+    "https://threejs.org/examples/textures/cube/Bridge2/negz.jpg"
+  ]);
+
+  // Chrome material
   const material = new THREE.MeshStandardMaterial({
-    color: 0x888888,
+    envMap: envMap,
     metalness: 1,
-    roughness: 0.1
+    roughness: 0.05
   });
 
   const geometry = new THREE.SphereGeometry(1, 64, 64);
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
-  const light1 = new THREE.PointLight(0xffffff, 1.5);
+  // Lights
+  const light1 = new THREE.PointLight(0xffffff, 1.2);
   light1.position.set(5, 5, 5);
   scene.add(light1);
-
   const light2 = new THREE.PointLight(0xffffff, 0.8);
   light2.position.set(-5, 5, 5);
   scene.add(light2);
 
-  scene.add(new THREE.AmbientLight(0x555555));
+  scene.add(new THREE.AmbientLight(0x666666));
 
+  // Animate
   function animate() {
     requestAnimationFrame(animate);
     sphere.rotation.y += 0.01;
     renderer.render(scene, camera);
   }
   animate();
-
-  new ResizeObserver(entries => {
-    const s = Math.min(container.clientWidth, container.clientHeight) || 300;
-    renderer.setSize(s, s);
-    camera.aspect = 1;
-    camera.updateProjectionMatrix();
-  }).observe(container);
 });
 </script>
 

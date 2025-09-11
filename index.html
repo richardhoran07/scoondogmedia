@@ -133,14 +133,14 @@ document.addEventListener("DOMContentLoaded", () => {
   renderer.setSize(300, 300);
   container.appendChild(renderer.domElement);
 
-  // Fake gradient environment: bright top, dark bottom
+  // Bright gradient environment map
   const canvas = document.createElement("canvas");
   canvas.width = 2;
   canvas.height = 2;
   const ctx = canvas.getContext("2d");
   const grad = ctx.createLinearGradient(0, 0, 0, 2);
-  grad.addColorStop(0, "#ffffff");
-  grad.addColorStop(1, "#111111");
+  grad.addColorStop(0, "#eeeeee");  // bright top
+  grad.addColorStop(1, "#444444");  // mid-gray bottom
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 2, 2);
   const texture = new THREE.CanvasTexture(canvas);
@@ -160,16 +160,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
-  // Lights
-  const light = new THREE.DirectionalLight(0xffffff, 1.0);
-  light.position.set(5, 5, 5);
-  scene.add(light);
-  scene.add(new THREE.AmbientLight(0x666666));
+  // Strong lights
+  const light1 = new THREE.PointLight(0xffffff, 2.5);
+  light1.position.set(5, 5, 5);
+  scene.add(light1);
+
+  const light2 = new THREE.PointLight(0xffffff, 1.5);
+  light2.position.set(-5, -5, 5);
+  scene.add(light2);
+
+  scene.add(new THREE.AmbientLight(0x888888, 1.2)); // brighter ambient
 
   // Animate
   function animate() {
     requestAnimationFrame(animate);
-    sphere.rotation.y += 0.01; // clearly rotates
+    sphere.rotation.y += 0.01; // rotate for visible highlights
     renderer.render(scene, camera);
   }
   animate();

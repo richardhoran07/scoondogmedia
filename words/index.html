@@ -43,13 +43,11 @@ for (const {file, title} of FILES){
 <script>
 function goHome(e){
   if(e) e.preventDefault();
-  // Works for both user sites and project sites
-  // /username/repo/... -> /username/repo/
   const parts = location.pathname.split('/').filter(Boolean);
+  // user site -> "/", project site -> "/<repo>/"
   let base = '/';
-  if (parts.length >= 2) {
-    // username.github.io/<repo>/...  
-    base = '/' + parts[0] + '/' + parts[1] + '/';
+  if (parts.length >= 1) {
+    base = '/' + parts[0] + '/';
   }
   location.href = base;
   return false;

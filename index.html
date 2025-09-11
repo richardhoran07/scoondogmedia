@@ -130,20 +130,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
-  const size = 300;
-  renderer.setSize(size, size);
+  renderer.setSize(300, 300);
   container.appendChild(renderer.domElement);
 
-  // Create a simple gradient cube env map
-  const loader = new THREE.CubeTextureLoader();
-  const envMap = loader.load([
-    "https://threejs.org/examples/textures/cube/Bridge2/posx.jpg",
-    "https://threejs.org/examples/textures/cube/Bridge2/negx.jpg",
-    "https://threejs.org/examples/textures/cube/Bridge2/posy.jpg",
-    "https://threejs.org/examples/textures/cube/Bridge2/negy.jpg",
-    "https://threejs.org/examples/textures/cube/Bridge2/posz.jpg",
-    "https://threejs.org/examples/textures/cube/Bridge2/negz.jpg"
-  ]);
+  // Use Three.js built-in skybox (colors only, no buildings)
+  const path = "https://threejs.org/examples/textures/cube/skybox/";
+  const format = ".jpg";
+  const urls = [
+    path + "px" + format, path + "nx" + format,
+    path + "py" + format, path + "ny" + format,
+    path + "pz" + format, path + "nz" + format
+  ];
+  const envMap = new THREE.CubeTextureLoader().load(urls);
+  scene.background = null; // keep page bg
+  scene.environment = envMap;
 
   // Chrome material
   const material = new THREE.MeshStandardMaterial({
@@ -160,16 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const light1 = new THREE.PointLight(0xffffff, 1.2);
   light1.position.set(5, 5, 5);
   scene.add(light1);
-  const light2 = new THREE.PointLight(0xffffff, 0.8);
-  light2.position.set(-5, 5, 5);
-  scene.add(light2);
-
   scene.add(new THREE.AmbientLight(0x666666));
 
-  // Animate
+  // Rotate environment map for the illusion of movement
   function animate() {
     requestAnimationFrame(animate);
-    sphere.rotation.y += 0.01;
+    envMap.rotation = (envMap.rotation || 0) + 0.005; // spin the cube map
     renderer.render(scene, camera);
   }
   animate();

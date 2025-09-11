@@ -46,7 +46,14 @@
 
     /* Panels: frame is drawn on :before so only the line squirm-waves */
     .panels { display: grid; gap: clamp(1rem, 3vw, 2.2rem); grid-template-columns: repeat(3, 1fr); align-items: stretch; margin: clamp(1rem, 3vw, 2rem) auto 2.4rem; max-width: 1100px; }
-    .panel { position: relative; min-height: min(60vh, 540px); background: repeating-linear-gradient(to bottom, #14141a 0 28px, #0f0f14 28px 30px); display: grid; place-items: center; overflow:hidden; }
+    .panel {
+  position: relative;
+  min-height: 260px;  /* shorter height */
+  background: repeating-linear-gradient(to bottom, #14141a 0 28px, #0f0f14 28px 30px);
+  display: grid;
+  place-items: center;
+  overflow:hidden;
+}
     .panel::before { content:""; position:absolute; inset:-6px; pointer-events:none; border-radius: 6px; border: 6px double var(--ink); box-shadow: inset 0 0 0 2px rgba(214,26,26,.45), 0 10px 40px rgba(0,0,0,.6); filter: url(#squirmBorder); }
     .panel:hover { transform: translateY(-3px); }
 
@@ -117,6 +124,7 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
+<!-- import map (leave this exactly as-is) -->
 <script type="importmap">
 {
   "imports": {
@@ -139,39 +147,44 @@ camera.position.z = 3;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0x000000, 0);
 renderer.setSize(300, 300);
 container.appendChild(renderer.domElement);
 
-// Proper reflective environment (no external textures needed)
+// Proper reflective environment (no external files)
 const pmrem = new THREE.PMREMGenerator(renderer);
 const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environment = envMap;
 
-// Chrome material
+// ⚙️ Chrome-y material
 const material = new THREE.MeshStandardMaterial({
+  color: 0xeeeeee,          // light base so reflections pop
   metalness: 1,
-  roughness: 0.06,
-  envMapIntensity: 1.4
+  roughness: 0.03,          // smoother = shinier
+  envMapIntensity: 2.2      // crank reflections
 });
 
-// Sphere
-const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), material);
+const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
 scene.add(sphere);
 
-// Soft fill light (env does most of the work)
-scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.9));
+// Soft fill (env does most of the work)
+scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.8));
 
-// Spin
+// 🔁 Animate (faster + slight tilt so it’s obvious)
+let t = 0;
 function animate() {
   requestAnimationFrame(animate);
-  sphere.rotation.y += 0.01;
+  t += 0.01;
+  sphere.rotation.y += 0.025;         // speed up spin
+  sphere.rotation.x = Math.sin(t) * 0.08; // subtle wobble for life
   renderer.render(scene, camera);
 }
 animate();
 
-// Keep it square if your container resizes
+// Keep canvas square if container resizes
 new ResizeObserver(() => {
   const s = Math.min(container.clientWidth || 300, container.clientHeight || 300) || 300;
   renderer.setSize(s, s);

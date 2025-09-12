@@ -160,28 +160,40 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
-  // Create a neutral cube texture manually (solid gray)
-  const size = 4;
-  const data = new Uint8Array([200,200,200, 200,200,200, 200,200,200, 200,200,200]);
-  const faces = [];
-  for (let i = 0; i < 6; i++) {
-    const tex = new THREE.DataTexture(new Uint8Array(size*size*3).fill(200), size, size, THREE.RGBFormat);
-    tex.needsUpdate = true;
-    faces.push(tex);
-  }
-  const mat = new THREE.MeshStandardMaterial({
-  color: 0xaaaaaa,     // not pure white, so it has a visible base
-  metalness: 1.0,
-  roughness: 0.1,
-  emissive: 0x111111,  // faint self-glow so it never disappears
-  emissiveIntensity: 0.3
-});
+  function makeGradientCanvas(color1, color2) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  const grad = ctx.createLinearGradient(0,0,64,64);
+  grad.addColorStop(0, color1);
+  grad.addColorStop(1, color2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(canvas);
+}
 
-  const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), mat);
-  scene.add(sphere);
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
-  fillLight.position.set(0, 1, 2);
-  scene.add(fillLight);
+// Build a cube map with different gradients on each side
+const envMap = new THREE.CubeTexture([
+  makeGradientCanvas("#444","#111").image,
+  makeGradientCanvas("#666","#222").image,
+  makeGradientCanvas("#555","#000").image,
+  makeGradientCanvas("#333","#111").image,
+  makeGradientCanvas("#777","#222").image,
+  makeGradientCanvas("#222","#000").image
+]);
+envMap.needsUpdate = true;
+
+// Shiny orb material
+const mat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  metalness: 1.0,
+  roughness: 0.05,
+  envMap: envMap,
+  envMapIntensity: 2.5
+});
+const sphere = new THREE.Mesh(new THREE.SphereGeometry(1,96,96), mat);
+scene.add(sphere);
   // 7 orbiting lights
   const lights=[
     new THREE.PointLight(0xff4444,1.5),

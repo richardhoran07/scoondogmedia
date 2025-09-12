@@ -117,9 +117,7 @@
   </main>
 
   <!-- background music -->
-  <audio id="bg-audio" loop>
-    <source src="sounds/background.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="bg-audio" src="sounds/background.mp3" loop muted></audio>
 
   <script type="importmap">
   {
@@ -162,7 +160,6 @@
       ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
       ctx.fill();
     }
-
     ctx.globalAlpha = 1;
   }
 
@@ -172,7 +169,7 @@
   }
   bgLoop();
 
-  // --- ORB REFLECTING STARFIELD ---
+  // --- ORB: shiny metal + environment reflection ---
   const container = document.getElementById("sphere-container");
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -182,15 +179,22 @@
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
 
-  const bgTex = new THREE.CanvasTexture(bgCanvas);
-  bgTex.mapping = THREE.EquirectangularReflectionMapping;
+  // Simple fake environment (gradient)
+  const envTex = new THREE.CubeTextureLoader().load([
+    "https://threejs.org/examples/textures/cube/skybox/px.jpg",
+    "https://threejs.org/examples/textures/cube/skybox/nx.jpg",
+    "https://threejs.org/examples/textures/cube/skybox/py.jpg",
+    "https://threejs.org/examples/textures/cube/skybox/ny.jpg",
+    "https://threejs.org/examples/textures/cube/skybox/pz.jpg",
+    "https://threejs.org/examples/textures/cube/skybox/nz.jpg"
+  ]);
 
   const material = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
+    color: 0xaaaaaa,
     metalness: 1,
     roughness: 0.0,
-    envMap: bgTex,
-    envMapIntensity: 2.8
+    envMap: envTex,
+    envMapIntensity: 1.5
   });
 
   const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
@@ -226,20 +230,23 @@
       );
     });
 
-    bgTex.needsUpdate = true;
     renderer.render(scene, camera);
   }
   animate();
 
-  // --- AUDIO PLAY ON FIRST MOUSE MOVE ---
+  // --- AUDIO: unlock on first mouse move ---
   const audio = document.getElementById("bg-audio");
   audio.volume = 0.7;
-
-  const unlock = () => {
-    audio.play().catch(err => console.log("Autoplay blocked:", err));
-    document.removeEventListener("mousemove", unlock);
-  };
-  document.addEventListener("mousemove", unlock, { once: true });
+  audio.play().catch(() => {
+    const unlock = () => {
+      audio.muted = false;
+      audio.play().catch(err => console.log("Audio error:", err));
+      document.removeEventListener("mousemove", unlock);
+      document.removeEventListener("touchstart", unlock);
+    };
+    document.addEventListener("mousemove", unlock, { once: true });
+    document.addEventListener("touchstart", unlock, { once: true });
+  });
 
   document.getElementById('year').textContent = new Date().getFullYear();
   </script>

@@ -20,7 +20,6 @@
       overflow: hidden;
     }
 
-    /* starfield */
     #bg-canvas {
       position: fixed;
       inset: 0;
@@ -144,7 +143,7 @@
     x: Math.random()*bgCanvas.width,
     y: Math.random()*bgCanvas.height,
     r: Math.random()*1.8+0.5,
-    color: ["white","red","lightblue","yellow","violet"][Math.floor(Math.random()*5)],
+    color: ["#ccc","#aaa","#99bbee","#dddddd","#999"][Math.floor(Math.random()*5)],
     twinkle: Math.random()*1000
   }));
 
@@ -169,7 +168,7 @@
   }
   bgLoop();
 
-  // --- ORB: shiny metal + environment reflection ---
+  // --- ORB: shiny chrome with real envMap ---
   const container = document.getElementById("sphere-container");
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -179,22 +178,21 @@
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
 
-  // Simple fake environment (gradient)
-  const envTex = new THREE.CubeTextureLoader().load([
-    "https://threejs.org/examples/textures/cube/skybox/px.jpg",
-    "https://threejs.org/examples/textures/cube/skybox/nx.jpg",
-    "https://threejs.org/examples/textures/cube/skybox/py.jpg",
-    "https://threejs.org/examples/textures/cube/skybox/ny.jpg",
-    "https://threejs.org/examples/textures/cube/skybox/pz.jpg",
-    "https://threejs.org/examples/textures/cube/skybox/nz.jpg"
-  ]);
+  // Bright cube map
+  const envTex = new THREE.CubeTextureLoader()
+    .setPath("https://threejs.org/examples/textures/cube/Bridge2/")
+    .load([
+      "posx.jpg","negx.jpg",
+      "posy.jpg","negy.jpg",
+      "posz.jpg","negz.jpg"
+    ]);
 
   const material = new THREE.MeshStandardMaterial({
-    color: 0xaaaaaa,
+    color: 0xffffff,
     metalness: 1,
     roughness: 0.0,
     envMap: envTex,
-    envMapIntensity: 1.5
+    envMapIntensity: 2.5
   });
 
   const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
@@ -234,7 +232,7 @@
   }
   animate();
 
-  // --- AUDIO: unlock on first mouse move ---
+  // --- AUDIO: unlock on first mouse move or touch ---
   const audio = document.getElementById("bg-audio");
   audio.volume = 0.7;
   audio.play().catch(() => {
@@ -252,3 +250,4 @@
   </script>
 </body>
 </html>
+

@@ -12,7 +12,7 @@
     #sphere-container { width:320px; height:320px; margin:2rem auto; z-index:2; position:relative; }
     .wrap { max-width:1200px; margin:0 auto; padding:1rem 1rem 3rem; position:relative; z-index:2; }
     .panels { display:grid; gap:1.5rem; grid-template-columns:repeat(3,1fr); margin:1rem auto 2rem; max-width:1000px; }
-    .panel { min-height:220px; background:rgba(10,10,15,0.8); display:grid; place-items:center; border:4px double var(--ink); box-shadow:0 0 20px rgba(214,26,26,.6); }
+    .panel { min-height:220px; background:rgba(10,10,15,0.8); display:grid; place-items:center; border:4px double var(--ink); box-shadow:0 0 20px rgba(214,26,26,.6); position:relative; }
     .panel-label { font-family:'UnifrakturCook',cursive; font-size:2rem; color:var(--ink); text-shadow:0 0 8px rgba(214,26,26,.55); }
     .panel a { position:absolute; inset:0; }
     .ticker-wrap { max-width:800px; margin:2rem auto 0; padding:.55rem 1rem; border:3px double var(--ink); background:rgba(15,15,20,0.9); color:var(--ink); text-align:center; font-family:'UnifrakturCook',cursive; }
@@ -70,14 +70,15 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
-  // cosmic gradient env
-  const cubeRenderTarget=new THREE.WebGLCubeRenderTarget(128);
-  const cubeCamera=new THREE.CubeCamera(0.1,10,cubeRenderTarget);
-  scene.add(cubeCamera);
-
-  const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96), new THREE.MeshStandardMaterial({
-    color:0xffffff, metalness:1, roughness:0.05, envMap:cubeRenderTarget.texture, envMapIntensity:3
-  }));
+  const sphere=new THREE.Mesh(
+    new THREE.SphereGeometry(1,96,96),
+    new THREE.MeshStandardMaterial({
+      color:0xffffff,
+      metalness:1,
+      roughness:0.2,
+      envMapIntensity:0.0 // no reflections, lights only
+    })
+  );
   scene.add(sphere);
 
   // orbiting saturated lights
@@ -90,13 +91,26 @@
 
   function animate(){
     requestAnimationFrame(animate);
-    const t=performance.now()*0.001;
-    sphere.rotation.y=t*1.0;
-    sphere.rotation.x=Math.sin(t*0.7)*0.25;
-    lights.forEach((l,i)=>{const r=3+i*0.2,s=0.5+i*0.15; l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.7+i)*r);});
-    cubeCamera.update(renderer,scene);
+    const t=performance.now()*0.0015;
+
+    // breathing scale
+    sphere.scale.x=1+0.05*Math.sin(t*2.1);
+    sphere.scale.y=1+0.05*Math.cos(t*1.7);
+    sphere.scale.z=1+0.05*Math.sin(t*2.3);
+
+    // subtle rotation
+    sphere.rotation.y+=0.01;
+    sphere.rotation.x+=0.004;
+
+    // orbiting lights
+    lights.forEach((l,i)=>{
+      const r=3+i*0.25,s=0.8+i*0.3;
+      l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.5+i)*r);
+    });
+
     renderer.render(scene,camera);
-  } animate();
+  }
+  animate();
 
   // --- AUDIO ---
   const audio=document.getElementById("bg-audio");
@@ -104,10 +118,14 @@
   const playBtn=document.getElementById("play-btn");
   audio.volume=0.7;
   let playing=false;
-  playBtn.addEventListener("click",()=>{ if(!playing){ audio.src=trackSelect.value; audio.play(); playBtn.textContent="⏸ Pause"; playing=true; } else { audio.pause(); playBtn.textContent="▶ Play"; playing=false; } });
+  playBtn.addEventListener("click",()=>{ 
+    if(!playing){ audio.src=trackSelect.value; audio.play(); playBtn.textContent="⏸ Pause"; playing=true; } 
+    else { audio.pause(); playBtn.textContent="▶ Play"; playing=false; } 
+  });
   trackSelect.addEventListener("change",()=>{ if(playing){ audio.src=trackSelect.value; audio.play(); }});
   document.getElementById("year").textContent=new Date().getFullYear();
   </script>
 </body>
+</html>
 </html>
 

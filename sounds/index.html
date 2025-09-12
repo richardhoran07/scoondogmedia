@@ -1,55 +1,25 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sounds — SCOONDOG156</title>
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
-<style>
-  :root{--bg:#0a0a0d;--ink:#d61a1a;--stone:#121217;--mortar:#0c0c10}
-  body{margin:0;background:
-    repeating-linear-gradient(to bottom,var(--stone)0 30px,var(--mortar)30px 32px),
-    repeating-linear-gradient(to right,transparent 0 62px,rgba(0,0,0,.2)62px 64px),var(--bg);
-    color:#ffd7d7;font-family:system-ui,ui-sans-serif}
-  main{max-width:900px;margin:0 auto;padding:1rem 1rem 3rem}
-  h1{font-family:'UnifrakturCook',cursive;color:var(--ink);text-align:center;margin:1rem 0}
-  .track{border:6px double var(--ink);margin:1rem 0;padding:.6rem 1rem;box-shadow:inset 0 0 0 2px rgba(214,26,26,.45)}
-  .back{display:inline-block;color:#ffd7d7;text-decoration:none;border:2px solid var(--ink);padding:.35rem .6rem}
-  a{color:#ffd7d7}
-</style>
-</head><body>
-<main>
-  <a class="back" href="#" onclick="return goHome(event)">← Back</a>
-  <h1>Sounds</h1>
-
-  <div id="list"></div>
-</main>
-
-<script>
-// Put your mp3s into /sounds/mp3/ and list them here
-const FILES = [
-  // {file:'demo1.mp3', title:'Demo 1'},
-  // {file:'demo2.mp3', title:'Demo 2'},
-];
-
-const list = document.getElementById('list');
-for (const {file, title} of FILES){
-  const div = document.createElement('div'); div.className='track';
-  const name = document.createElement('div'); name.textContent = title || file; list.appendChild(div); div.appendChild(name);
-  const a = document.createElement('a'); a.href = `./mp3/${encodeURIComponent(file)}`; a.textContent = 'Download / Play';
-  a.target = '_blank'; div.appendChild(a);
-  // Inline player (optional): uncomment to enable
-  // const audio = document.createElement('audio'); audio.controls=true; audio.src=`./mp3/${encodeURIComponent(file)}`; div.appendChild(audio);
-}
-</script>
-<script>
-function goHome(e){
-  if(e) e.preventDefault();
-  const parts = location.pathname.split('/').filter(Boolean);
-  // user site -> "/", project site -> "/<repo>/"
-  let base = '/';
-  if (parts.length >= 1) {
-    base = '/' + parts[0] + '/';
-  }
-  location.href = base;
-  return false;
-}
-</script>
-</body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sounds | SCOONDOG156</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; background:black; overflow:hidden; color:#ffd7d7; font-family:'Inter',sans-serif; }
+    #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <main class="wrap">
+    <h1 style="font-family:'UnifrakturCook',cursive;color:#d61a1a;">SOUNDS</h1>
+    <p>....</p>
+    <footer>© <span id="year"></span> SCOONDOG156</footer>
+  </main>
+  <script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="../common.js"></script>
+</body>
+</html>

@@ -60,7 +60,7 @@
   function drawStars(time){ ctx.fillStyle="black"; ctx.fillRect(0,0,bgCanvas.width,bgCanvas.height); for(const s of stars){const flick=0.5+0.5*Math.sin(time*0.002+s.tw); ctx.fillStyle=s.color; ctx.globalAlpha=flick; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();} ctx.globalAlpha=1; }
   (function loop(t){ drawStars(t); requestAnimationFrame(loop); })(0);
 
-  // --- ORB ---
+// --- ORB ---
 const cont = document.getElementById("sphere-container");
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -69,21 +69,13 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(cont.clientWidth, cont.clientHeight);
 cont.appendChild(renderer.domElement);
 
-// cube camera
+// cube camera for reflections
 const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
   generateMipmaps: true,
   minFilter: THREE.LinearMipmapLinearFilter,
 });
 const cubeCamera = new THREE.CubeCamera(0.1, 10, cubeRenderTarget);
 scene.add(cubeCamera);
-
-// gradient background sphere (hidden, for reflections only)
-const gradientMat = new THREE.MeshBasicMaterial({
-  color: 0x4444ff,
-  side: THREE.BackSide
-});
-const gradientSphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), gradientMat);
-scene.add(gradientSphere);
 
 // shiny reflective sphere
 const sphere = new THREE.Mesh(
@@ -93,20 +85,20 @@ const sphere = new THREE.Mesh(
     metalness: 1,
     roughness: 0.05,
     envMap: cubeRenderTarget.texture,
-    envMapIntensity: 2.5,
+    envMapIntensity: 3,
   })
 );
 scene.add(sphere);
 
-// lights
+// bright saturated lights
 const lights = [
-  new THREE.PointLight(0xff0000, 1.8),
-  new THREE.PointLight(0x00ffff, 1.6),
-  new THREE.PointLight(0xff00ff, 1.6),
-  new THREE.PointLight(0xffff00, 1.6),
-  new THREE.PointLight(0x00ff00, 1.5),
-  new THREE.PointLight(0xff8800, 1.5),
-  new THREE.PointLight(0x8888ff, 1.5),
+  new THREE.PointLight(0xff0000, 2),
+  new THREE.PointLight(0x00ffff, 2),
+  new THREE.PointLight(0xff00ff, 2),
+  new THREE.PointLight(0xffff00, 2),
+  new THREE.PointLight(0x00ff00, 2),
+  new THREE.PointLight(0xff8800, 2),
+  new THREE.PointLight(0x8888ff, 2),
 ];
 lights.forEach(l => scene.add(l));
 
@@ -116,10 +108,11 @@ function animate() {
   const t = performance.now() * 0.0015;
 
   // breathing wobble
-  sphere.scale.x = 1 + 0.05 * Math.sin(t * 2.1);
-  sphere.scale.y = 1 + 0.05 * Math.cos(t * 1.7);
-  sphere.scale.z = 1 + 0.05 * Math.sin(t * 2.3);
+  sphere.scale.x = 1 + 0.07 * Math.sin(t * 2.1);
+  sphere.scale.y = 1 + 0.07 * Math.cos(t * 1.7);
+  sphere.scale.z = 1 + 0.07 * Math.sin(t * 2.3);
 
+  // rotation
   sphere.rotation.y += 0.01;
   sphere.rotation.x += 0.004;
 
@@ -133,7 +126,7 @@ function animate() {
     );
   });
 
-  // reflections
+  // reflections update
   sphere.visible = false;
   cubeCamera.update(renderer, scene);
   sphere.visible = true;
@@ -141,6 +134,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
 
   // --- AUDIO ---
   const audio=document.getElementById("bg-audio");

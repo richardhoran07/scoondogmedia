@@ -160,10 +160,23 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
+  // Create a neutral cube texture manually (solid gray)
+  const size = 4;
+  const data = new Uint8Array([200,200,200, 200,200,200, 200,200,200, 200,200,200]);
+  const faces = [];
+  for (let i = 0; i < 6; i++) {
+    const tex = new THREE.DataTexture(new Uint8Array(size*size*3).fill(200), size, size, THREE.RGBFormat);
+    tex.needsUpdate = true;
+    faces.push(tex);
+  }
+  const envMap = new THREE.CubeTexture(faces.map(f=>f.image));
+  envMap.needsUpdate = true;
+
   const mat=new THREE.MeshStandardMaterial({
     color:0xffffff,
     metalness:1.0,
     roughness:0.05,
+    envMap:envMap,
     envMapIntensity:2.0
   });
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);

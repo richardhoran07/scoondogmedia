@@ -170,10 +170,12 @@
     faces.push(tex);
   }
   const mat = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
+  color: 0xaaaaaa,     // not pure white, so it has a visible base
   metalness: 1.0,
-  roughness: 0.05
-  });
+  roughness: 0.1,
+  emissive: 0x111111,  // faint self-glow so it never disappears
+  emissiveIntensity: 0.3
+});
 
   const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), mat);
   scene.add(sphere);

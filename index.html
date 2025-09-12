@@ -159,8 +159,8 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
-  // Procedural reflection environment
-  function makeSpaceEnv() {
+  // Animated procedural reflection texture
+  function makeSpaceEnv(time=0) {
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 256;
     const ctx = canvas.getContext("2d");
@@ -176,8 +176,8 @@
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
       const r = Math.random() * 60 + 20;
-      const hue = [0, 360, 200, 20, 300][Math.floor(Math.random() * 5)];
-      const color = `hsla(${hue}, 80%, 60%, 0.15)`;
+      const hue = (time*50 + i*20) % 360; // hue shift with time
+      const color = `hsla(${hue}, 80%, 60%, 0.2)`;
       const gradRad = ctx.createRadialGradient(x, y, 0, x, y, r);
       gradRad.addColorStop(0, color);
       gradRad.addColorStop(1, "transparent");
@@ -190,11 +190,10 @@
     tex.needsUpdate = true;
     return tex;
   }
-  const envMap = makeSpaceEnv();
 
   const mat=new THREE.MeshStandardMaterial({
     color:0xffffff, metalness:1, roughness:0.05,
-    envMap:envMap, envMapIntensity:2.5
+    envMapIntensity:2.5
   });
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
   scene.add(sphere);
@@ -212,14 +211,21 @@
 
   function animate(){
     requestAnimationFrame(animate);
-    const t=performance.now()*0.001;
-    sphere.rotation.y=t*1.0;
-    sphere.rotation.x=Math.sin(t*0.7)*0.25;
-    sphere.rotation.z=Math.cos(t*0.5)*0.2;
+    const t=performance.now()*0.002; // faster
+
+    // regenerate envMap every frame
+    mat.envMap = makeSpaceEnv(t);
+    mat.needsUpdate = true;
+
+    sphere.rotation.y=t*0.8;
+    sphere.rotation.x=Math.sin(t*0.5)*0.3;
+    sphere.rotation.z=Math.cos(t*0.3)*0.2;
+
     lights.forEach((l,i)=>{
-      const r=3+i*0.2,s=0.4+i*0.15;
-      l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.7+i)*r);
+      const r=3+i*0.2,s=0.6+i*0.25;
+      l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.5+i)*r);
     });
+
     renderer.render(scene,camera);
   } animate();
 

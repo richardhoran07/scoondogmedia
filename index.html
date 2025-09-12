@@ -61,68 +61,86 @@
   (function loop(t){ drawStars(t); requestAnimationFrame(loop); })(0);
 
   // --- ORB ---
-  const cont=document.getElementById("sphere-container");
-  const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(45,1,0.1,1000);
-  camera.position.z=3;
-  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-  renderer.setSize(cont.clientWidth,cont.clientHeight);
-  cont.appendChild(renderer.domElement);
+const cont = document.getElementById("sphere-container");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+camera.position.z = 3;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(cont.clientWidth, cont.clientHeight);
+cont.appendChild(renderer.domElement);
 
-  // cube camera for reflections
-  const cubeRenderTarget=new THREE.WebGLCubeRenderTarget(256,{generateMipmaps:true, minFilter:THREE.LinearMipmapLinearFilter});
-  const cubeCamera=new THREE.CubeCamera(0.1,10,cubeRenderTarget);
-  scene.add(cubeCamera);
+// cube camera
+const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
+  generateMipmaps: true,
+  minFilter: THREE.LinearMipmapLinearFilter,
+});
+const cubeCamera = new THREE.CubeCamera(0.1, 10, cubeRenderTarget);
+scene.add(cubeCamera);
 
-  // shiny breathing sphere
-  const sphere=new THREE.Mesh(
-    new THREE.SphereGeometry(1,96,96),
-    new THREE.MeshStandardMaterial({
-      color:0xffffff,
-      metalness:1,
-      roughness:0.05,
-      envMap:cubeRenderTarget.texture,
-      envMapIntensity:3
-    })
-  );
-  scene.add(sphere);
+// gradient background sphere (hidden, for reflections only)
+const gradientMat = new THREE.MeshBasicMaterial({
+  color: 0x4444ff,
+  side: THREE.BackSide
+});
+const gradientSphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), gradientMat);
+scene.add(gradientSphere);
 
-  // orbiting saturated lights
-  const lights=[
-    new THREE.PointLight(0xff0000,1.8), new THREE.PointLight(0x00ffff,1.6),
-    new THREE.PointLight(0xff00ff,1.6), new THREE.PointLight(0xffff00,1.6),
-    new THREE.PointLight(0x00ff00,1.5), new THREE.PointLight(0xff8800,1.5),
-    new THREE.PointLight(0x8888ff,1.5)
-  ]; lights.forEach(l=>scene.add(l));
+// shiny reflective sphere
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 96, 96),
+  new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness: 1,
+    roughness: 0.05,
+    envMap: cubeRenderTarget.texture,
+    envMapIntensity: 2.5,
+  })
+);
+scene.add(sphere);
 
-  // animate
-  function animate(){
-    requestAnimationFrame(animate);
-    const t=performance.now()*0.0015;
+// lights
+const lights = [
+  new THREE.PointLight(0xff0000, 1.8),
+  new THREE.PointLight(0x00ffff, 1.6),
+  new THREE.PointLight(0xff00ff, 1.6),
+  new THREE.PointLight(0xffff00, 1.6),
+  new THREE.PointLight(0x00ff00, 1.5),
+  new THREE.PointLight(0xff8800, 1.5),
+  new THREE.PointLight(0x8888ff, 1.5),
+];
+lights.forEach(l => scene.add(l));
 
-    // breathing wobble
-    sphere.scale.x=1+0.05*Math.sin(t*2.1);
-    sphere.scale.y=1+0.05*Math.cos(t*1.7);
-    sphere.scale.z=1+0.05*Math.sin(t*2.3);
+// animate
+function animate() {
+  requestAnimationFrame(animate);
+  const t = performance.now() * 0.0015;
 
-    // rotation
-    sphere.rotation.y+=0.01;
-    sphere.rotation.x+=0.004;
+  // breathing wobble
+  sphere.scale.x = 1 + 0.05 * Math.sin(t * 2.1);
+  sphere.scale.y = 1 + 0.05 * Math.cos(t * 1.7);
+  sphere.scale.z = 1 + 0.05 * Math.sin(t * 2.3);
 
-    // orbiting lights
-    lights.forEach((l,i)=>{
-      const r=3+i*0.25,s=0.8+i*0.3;
-      l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.5+i)*r);
-    });
+  sphere.rotation.y += 0.01;
+  sphere.rotation.x += 0.004;
 
-    // update reflections
-    sphere.visible=false;
-    cubeCamera.update(renderer,scene);
-    sphere.visible=true;
+  // orbiting lights
+  lights.forEach((l, i) => {
+    const r = 3 + i * 0.25, s = 0.8 + i * 0.3;
+    l.position.set(
+      Math.cos(t * s + i) * r,
+      Math.sin(t * s + i * 0.7) * r,
+      Math.sin(t * s * 0.5 + i) * r
+    );
+  });
 
-    renderer.render(scene,camera);
-  }
-  animate();
+  // reflections
+  sphere.visible = false;
+  cubeCamera.update(renderer, scene);
+  sphere.visible = true;
+
+  renderer.render(scene, camera);
+}
+animate();
 
   // --- AUDIO ---
   const audio=document.getElementById("bg-audio");

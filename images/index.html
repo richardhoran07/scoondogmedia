@@ -22,6 +22,19 @@
       text-decoration:none;
       font-family:'UnifrakturCook',cursive;
       box-shadow:0 0 10px rgba(214,26,26,.6);
+      #bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;   /* always behind */
+  display: block;
+}
+
+main, .wrap, #audio-controls, .gallery, footer, h1, p {
+  position: relative;
+  z-index: 1;    /* force on top */
+}
     }
     .back-btn:hover { background:#111; }
   </style>

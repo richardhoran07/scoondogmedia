@@ -114,6 +114,9 @@
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
 
+  <!-- background music -->
+  <audio id="bg-music" src="sounds/background.wav" autoplay loop></audio>
+
   <!-- Import map for three.js -->
   <script type="importmap">
   {
@@ -126,7 +129,7 @@
   <script type="module">
   import * as THREE from "three";
 
-  // --- BACKGROUND: chaotic datamosh waves ---
+  // --- BACKGROUND: unstable glitch waves ---
   const bgCanvas = document.getElementById("bg-canvas");
   const ctx = bgCanvas.getContext("2d");
   function resizeBG() {
@@ -144,25 +147,25 @@
     for (let i=0; i<bands; i++) {
       ctx.beginPath();
       // flicker color like unstable saber plasma
-      const r = 180 + Math.sin(time*0.005 + i)*75;
+      const r = 150 + Math.sin(time*0.005 + i)*105;
       const g = 30 + Math.random()*20;
       const b = 30 + Math.random()*20;
       ctx.strokeStyle = `rgb(${r},${g},${b})`;
-      ctx.lineWidth = 2 + Math.random()*4;
+      ctx.lineWidth = 2 + Math.random()*6;
 
-      for (let x=0;x<bgCanvas.width;x+=8) {
+      for (let x=0;x<bgCanvas.width;x+=6) {
         const baseY = (bgCanvas.height/(bands+1))*(i+1);
         const y = baseY
-          + Math.sin((x*0.02)+(time*0.004+i))*40
-          + (Math.random()*8-4); // glitchy wobble
+          + Math.sin((x*0.04)+(time*0.006+i))*50
+          + (Math.random()*10-5); // glitch wobble
         if(x===0) ctx.moveTo(x,y);
         else ctx.lineTo(x,y);
       }
       ctx.stroke();
     }
 
-    // sprinkle static sparks
-    for (let i=0;i<200;i++) {
+    // static sparks
+    for (let i=0;i<300;i++) {
       ctx.fillStyle = Math.random() > 0.5 ? "white" : "red";
       ctx.fillRect(Math.random()*bgCanvas.width, Math.random()*bgCanvas.height, 1, 1);
     }

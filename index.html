@@ -14,61 +14,28 @@
       overflow-x: hidden;
     }
     #sphere-container {
-      width: 300px;
-      height: 300px;
-      margin: 2rem auto 1rem;
+      width: 320px;
+      height: 320px;
+      margin: 2rem auto 0.5rem;
     }
     #player {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 0.5rem;
-      margin-bottom: 2rem;
-      font-size: 1rem;
+      margin-bottom: 1.5rem;
     }
     #player select, #player button {
       background: black;
-      border: 1px solid #ff2222;
       color: #ff2222;
-      font-family: 'UnifrakturCook', cursive;
+      border: 1px solid #ff2222;
       padding: 0.3rem 0.6rem;
-    }
-    #player button:hover {
-      background: #ff2222;
-      color: black;
+      font-family: 'UnifrakturCook', cursive;
+      font-size: 0.9rem;
       cursor: pointer;
     }
-    .panels {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-top: 1rem;
-    }
-    .panel {
-      position: relative;
-      width: 200px;
-      height: 200px;
-      background: #0a0a0d;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 2px solid #ff2222;
-      box-shadow: 0 0 10px #ff2222;
-    }
-    .panel a {
-      position: absolute;
-      inset: 0;
-      text-decoration: none;
-      color: #ff2222;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-    }
-    footer {
-      text-align: center;
-      margin: 2rem;
-      color: #ff2222;
+    #player button:hover, #player select:hover {
+      background: #1a0000;
     }
   </style>
 </head>
@@ -76,7 +43,7 @@
   <main>
     <div id="sphere-container"></div>
 
-    <!-- Audio player -->
+    <!-- Audio Player -->
     <div id="player">
       <select id="trackSelect">
         <option value="background.mp3">background.mp3</option>
@@ -85,109 +52,119 @@
       </select>
       <button id="playBtn">▶ Play</button>
     </div>
-
-    <!-- Panels -->
-    <section class="panels">
-      <div class="panel"><a href="words/">Words</a></div>
-      <div class="panel"><a href="images/">Images</a></div>
-      <div class="panel"><a href="sounds/">Sounds</a></div>
-    </section>
-
-    <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
 
-  <!-- Load Three.js before using it -->
+  <!-- Load Three.js first -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
 
   <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+    window.addEventListener("DOMContentLoaded", () => {
+      // ==============================
+      // ORB + STARS
+      // ==============================
+      const cont = document.getElementById("sphere-container");
+      const scene = new THREE.Scene();
 
-    // --------- THREE.js Orb + Stars ----------
-    const cont = document.getElementById("sphere-container");
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    camera.position.z = 3;
+      const camera = new THREE.PerspectiveCamera(45, cont.clientWidth / cont.clientHeight, 0.1, 1000);
+      camera.position.z = 4;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(cont.clientWidth, cont.clientHeight);
-    cont.appendChild(renderer.domElement);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(cont.clientWidth, cont.clientHeight);
+      cont.appendChild(renderer.domElement);
 
-    // Starfield
-    const starGeo = new THREE.BufferGeometry();
-    const starCount = 2000;
-    const positions = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount * 3; i++) positions[i] = (Math.random() - 0.5) * 50;
-    starGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.05 });
-    const stars = new THREE.Points(starGeo, starMat);
-    scene.add(stars);
-
-    // Neutral gray cube texture for chrome reflection
-    const size = 16;
-    const data = new Uint8Array(3 * size * size * 6).fill(200);
-    const envTex = new THREE.DataTextureCube(data, size, size);
-    envTex.needsUpdate = true;
-
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      metalness: 1,
-      roughness: 0.05,
-      envMap: envTex,
-      envMapIntensity: 2.0
-    });
-
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), mat);
-    scene.add(sphere);
-
-    // Orbiting lights
-    const lights = [
-      new THREE.PointLight(0xffffff, 2.0),
-      new THREE.PointLight(0xff4444, 2.0),
-      new THREE.PointLight(0x66ccff, 2.0),
-      new THREE.PointLight(0xffaa00, 2.0),
-      new THREE.PointLight(0xff66ff, 2.0),
-      new THREE.PointLight(0x99ff66, 2.0)
-    ];
-    lights.forEach(l => scene.add(l));
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const t = performance.now() * 0.001;
-
-      sphere.rotation.y = t * 1.0;
-      sphere.rotation.x = Math.sin(t * 0.7) * 0.25;
-      sphere.rotation.z = Math.cos(t * 0.5) * 0.2;
-
-      lights.forEach((l, i) => {
-        const r = 3 + i * 0.22;
-        const s = 0.45 + i * 0.15;
-        l.position.set(
-          Math.cos(t * s + i) * r,
-          Math.sin(t * s + i * 0.7) * r,
-          Math.sin(t * s * 0.7 + i) * r
-        );
+      // Shiny chrome-like material
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        metalness: 1,
+        roughness: 0.05,
+        envMapIntensity: 2.0
       });
 
-      renderer.render(scene, camera);
-    }
-    animate();
+      const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), mat);
+      scene.add(sphere);
 
-    // --------- Audio Player ----------
-    const audio = new Audio();
-    audio.volume = 0.7;
-    audio.loop = true;
+      // Background stars
+      const starGeo = new THREE.BufferGeometry();
+      const starCount = 2000;
+      const starVerts = [];
+      for (let i = 0; i < starCount; i++) {
+        const x = (Math.random() - 0.5) * 200;
+        const y = (Math.random() - 0.5) * 200;
+        const z = (Math.random() - 0.5) * 200;
+        starVerts.push(x, y, z);
+      }
+      starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starVerts, 3));
+      const starMat = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.7, transparent: true, opacity: 0.8 });
+      const stars = new THREE.Points(starGeo, starMat);
+      scene.add(stars);
 
-    const select = document.getElementById("trackSelect");
-    const playBtn = document.getElementById("playBtn");
+      // 7 orbiting lights
+      const colors = [0xffffff, 0xff2222, 0x22aaff, 0x22ff22, 0xffff22, 0xaa22ff, 0x22ffff];
+      const lights = [];
+      colors.forEach(c => {
+        const light = new THREE.PointLight(c, 1.5, 10);
+        scene.add(light);
+        lights.push(light);
+      });
 
-    playBtn.addEventListener("click", () => {
-      audio.src = select.value;
-      audio.play()
-        .then(() => {
-          playBtn.textContent = "⏸ Pause";
-        })
-        .catch(err => console.log("Audio error:", err));
+      // Animate lights around orb
+      let t = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        t += 0.01;
+
+        sphere.rotation.y += 0.005;
+        sphere.rotation.x = Math.sin(t * 0.3) * 0.1;
+
+        lights.forEach((l, i) => {
+          const angle = t + (i * (Math.PI * 2 / lights.length));
+          l.position.set(
+            Math.cos(angle) * 2,
+            Math.sin(angle * 0.7) * 2,
+            Math.sin(angle) * 2
+          );
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // ==============================
+      // AUDIO PLAYER
+      // ==============================
+      const audio = new Audio();
+      audio.volume = 0.7;
+      audio.loop = true;
+
+      const trackSelect = document.getElementById("trackSelect");
+      const playBtn = document.getElementById("playBtn");
+
+      let isPlaying = false;
+
+      playBtn.addEventListener("click", () => {
+        if (!isPlaying) {
+          audio.src = "sounds/" + trackSelect.value;
+          audio.play().then(() => {
+            playBtn.textContent = "⏸ Pause";
+            isPlaying = true;
+          }).catch(err => console.log("Audio play error:", err));
+        } else {
+          audio.pause();
+          playBtn.textContent = "▶ Play";
+          isPlaying = false;
+        }
+      });
+
+      trackSelect.addEventListener("change", () => {
+        if (isPlaying) {
+          audio.src = "sounds/" + trackSelect.value;
+          audio.play();
+        }
+      });
     });
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>

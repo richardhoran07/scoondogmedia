@@ -159,8 +159,8 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
-  // Animated procedural reflection texture (slower update)
-  function makeSpaceEnv(time=0) {
+  // generate procedural texture (deterministic by seed)
+  function makeSpaceEnv(seed=0) {
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 256;
     const ctx = canvas.getContext("2d");
@@ -173,10 +173,10 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < 80; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const r = Math.random() * 50 + 15;
-      const hue = (time*10 + i*15) % 360; // much slower hue shift
+      const x = (Math.sin(i*seed*0.1+seed)*0.5+0.5)*canvas.width;
+      const y = (Math.cos(i*seed*0.13+seed*0.5)*0.5+0.5)*canvas.height;
+      const r = 20 + 40*Math.abs(Math.sin(seed*0.2+i));
+      const hue = (seed*5 + i*10) % 360;
       const color = `hsla(${hue}, 80%, 60%, 0.15)`;
       const gradRad = ctx.createRadialGradient(x, y, 0, x, y, r);
       gradRad.addColorStop(0, color);
@@ -191,9 +191,14 @@
     return tex;
   }
 
+  // prepare two textures to interpolate between
+  let texA = makeSpaceEnv(0);
+  let texB = makeSpaceEnv(50);
+  let blend = 0;
+
   const mat=new THREE.MeshStandardMaterial({
     color:0xffffff, metalness:1, roughness:0.05,
-    envMapIntensity:2.5
+    envMap: texA, envMapIntensity:2.5
   });
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
   scene.add(sphere);
@@ -211,13 +216,18 @@
 
   function animate(){
     requestAnimationFrame(animate);
-    const t=performance.now()*0.001; // slower
+    const t=performance.now()*0.001;
 
-    // update envMap less aggressively
-    if (Math.floor(t*2) % 2 === 0) { // ~2 times per second
-      mat.envMap = makeSpaceEnv(t);
-      mat.needsUpdate = true;
+    // morph env texture slowly
+    blend += 0.002;
+    if (blend >= 1) {
+      texA = texB;
+      texB = makeSpaceEnv(Math.random()*1000);
+      blend = 0;
     }
+    // mix textures (approximation: switch midpoint)
+    mat.envMap = blend < 0.5 ? texA : texB;
+    mat.needsUpdate = true;
 
     sphere.rotation.y=t*0.4;
     sphere.rotation.x=Math.sin(t*0.5)*0.2;

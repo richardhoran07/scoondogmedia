@@ -37,24 +37,24 @@
   { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js" } }
   </script>
   <script type="module" src="../common.js"></script>
-  <script>
-  // Add file names here (they must exist in ./full/)
-  const FILES = [
-    "2025.jpg",
-    "masterpiece.jpg",
-    "IndustrialZone.jpg",
-    "TheMall.jpg",
-    "backshots.jpg",
-    "Cat.jpg",
-    "IslandBoy.jpg"
-  ];
-  const gallery=document.getElementById("gallery");
-  FILES.forEach(f=>{
-    const img=document.createElement("img");
-    img.src="full/"+f;
-    img.alt=f;
-    gallery.appendChild(img);
-  });
-  </script>
+ <script>
+const FILES = [
+  "2025.jpg",
+  "masterpiece.jpg",
+  "IndustrialZone.jpg",
+  "TheMall.jpg",
+  "backshots.jpg",
+  "Cat.jpg",
+  "IslandBoy.jpg"
+];
+const gallery=document.getElementById("gallery");
+FILES.forEach(f=>{
+  const img=document.createElement("img");
+  img.src="images/full/"+f;   // FIXED PATH
+  img.alt=f;
+  img.onerror=()=>console.error("Missing image:", img.src);
+  gallery.appendChild(img);
+});
+</script>
 </body>
 </html>

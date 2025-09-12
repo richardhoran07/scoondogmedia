@@ -10,11 +10,24 @@
     #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
     #audio-controls { display:flex; justify-content:center; align-items:center; gap:.5rem; margin:1rem; font-family:'UnifrakturCook',cursive; color:#d61a1a; }
     #audio-controls select, #audio-controls button { background:black; color:#d61a1a; border:2px solid #d61a1a; padding:.2rem .4rem; font-family:inherit; }
+    .back-btn {
+      display:inline-block;
+      margin:1rem;
+      padding:.4rem .8rem;
+      border:2px double #d61a1a;
+      color:#d61a1a;
+      background:black;
+      text-decoration:none;
+      font-family:'UnifrakturCook',cursive;
+      box-shadow:0 0 10px rgba(214,26,26,.6);
+    }
+    .back-btn:hover { background:#111; }
   </style>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
   <main class="wrap">
+    <a href="../" class="back-btn">⬅ Back</a>
     <div id="audio-controls">
       <select id="track-select">
         <option value="../sounds/background.mp3">background.mp3</option>
@@ -24,7 +37,7 @@
       <button id="play-btn">▶ Play</button>
     </div>
     <h1 style="font-family:'UnifrakturCook',cursive;color:#d61a1a;">WORDS</h1>
-    <p>...</p>
+    <p>Patience is a virtue</p>
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
   <audio id="bg-audio" loop></audio>

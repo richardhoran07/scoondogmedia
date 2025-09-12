@@ -169,17 +169,13 @@
     tex.needsUpdate = true;
     faces.push(tex);
   }
-  const envMap = new THREE.CubeTexture(faces.map(f=>f.image));
-  envMap.needsUpdate = true;
-
-  const mat=new THREE.MeshStandardMaterial({
-    color:0xffffff,
-    metalness:1.0,
-    roughness:0.05,
-    envMap:envMap,
-    envMapIntensity:2.0
+  const mat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  metalness: 1.0,
+  roughness: 0.05
   });
-  const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
+
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), mat);
   scene.add(sphere);
 
   // 7 orbiting lights

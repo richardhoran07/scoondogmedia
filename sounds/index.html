@@ -8,13 +8,26 @@
   <style>
     body { margin:0; background:black; overflow:hidden; color:#ffd7d7; font-family:'Inter',sans-serif; }
     #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+    .back-btn {
+      display:inline-block;
+      margin:1rem;
+      padding:.4rem .8rem;
+      border:2px double #d61a1a;
+      color:#d61a1a;
+      background:black;
+      text-decoration:none;
+      font-family:'UnifrakturCook',cursive;
+      box-shadow:0 0 10px rgba(214,26,26,.6);
+    }
+    .back-btn:hover { background:#111; }
   </style>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
   <main class="wrap">
+    <a href="../" class="back-btn">⬅ Back</a>
     <h1 style="font-family:'UnifrakturCook',cursive;color:#d61a1a;">SOUNDS</h1>
-    <p>....</p>
+    <p>Patience is a virtue</p>
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
   <script type="importmap">

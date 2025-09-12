@@ -17,7 +17,6 @@
     .panel a { position:absolute; inset:0; }
     .ticker-wrap { max-width:800px; margin:2rem auto 0; padding:.55rem 1rem; border:3px double var(--ink); background:rgba(15,15,20,0.9); color:var(--ink); text-align:center; font-family:'UnifrakturCook',cursive; }
     footer { text-align:center; color:var(--ink); font-size:.85rem; margin-top:1rem; }
-    /* audio player */
     #audio-controls { display:flex; justify-content:center; align-items:center; gap:.5rem; margin:1rem auto; font-family:'UnifrakturCook',cursive; color:var(--ink); }
     #audio-controls select, #audio-controls button { background:black; color:var(--ink); border:2px solid var(--ink); padding:.2rem .4rem; font-family:inherit; }
   </style>
@@ -70,13 +69,20 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
+  // cube camera for reflections
+  const cubeRenderTarget=new THREE.WebGLCubeRenderTarget(256,{generateMipmaps:true, minFilter:THREE.LinearMipmapLinearFilter});
+  const cubeCamera=new THREE.CubeCamera(0.1,10,cubeRenderTarget);
+  scene.add(cubeCamera);
+
+  // shiny breathing sphere
   const sphere=new THREE.Mesh(
     new THREE.SphereGeometry(1,96,96),
     new THREE.MeshStandardMaterial({
       color:0xffffff,
       metalness:1,
-      roughness:0.2,
-      envMapIntensity:0.0 // no reflections, lights only
+      roughness:0.05,
+      envMap:cubeRenderTarget.texture,
+      envMapIntensity:3
     })
   );
   scene.add(sphere);
@@ -89,16 +95,17 @@
     new THREE.PointLight(0x8888ff,1.5)
   ]; lights.forEach(l=>scene.add(l));
 
+  // animate
   function animate(){
     requestAnimationFrame(animate);
     const t=performance.now()*0.0015;
 
-    // breathing scale
+    // breathing wobble
     sphere.scale.x=1+0.05*Math.sin(t*2.1);
     sphere.scale.y=1+0.05*Math.cos(t*1.7);
     sphere.scale.z=1+0.05*Math.sin(t*2.3);
 
-    // subtle rotation
+    // rotation
     sphere.rotation.y+=0.01;
     sphere.rotation.x+=0.004;
 
@@ -107,6 +114,11 @@
       const r=3+i*0.25,s=0.8+i*0.3;
       l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.5+i)*r);
     });
+
+    // update reflections
+    sphere.visible=false;
+    cubeCamera.update(renderer,scene);
+    sphere.visible=true;
 
     renderer.render(scene,camera);
   }
@@ -127,5 +139,3 @@
   </script>
 </body>
 </html>
-</html>
-

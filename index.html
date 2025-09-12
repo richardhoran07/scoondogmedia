@@ -179,7 +179,9 @@
 
   const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), mat);
   scene.add(sphere);
-
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  fillLight.position.set(0, 1, 2);
+  scene.add(fillLight);
   // 7 orbiting lights
   const lights=[
     new THREE.PointLight(0xff4444,1.5),

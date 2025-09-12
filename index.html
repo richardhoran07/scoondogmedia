@@ -4,265 +4,244 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SCOONDOG156 MULTIMEDIA WAREHOUSE</title>
-  <meta name="description" content="Words · Images · Sounds" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #0a0a0d;           /* crypt black */
-      --ink: #d61a1a;          /* blood red */
-      --stone: #121217;        /* stone base */
-      --mortar: #0c0c10;       /* mortar lines */
+      --ink: #d61a1a; /* blood red */
     }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-  margin: 0;
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  color: #ffd7d7;
-  background: repeating-linear-gradient(
-    to bottom,
-    #0a0a0a 0%,
-    #111 2%,
-    #d61a1a 4%,
-    #222 6%
-  );
-  background-size: 100% 400%;
-  animation: datamoshScroll 6s linear infinite;
-}
 
-@keyframes datamoshScroll {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
-}
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      color: #ffd7d7;
+      overflow-x: hidden;
+    }
 
-/* static fuzz overlay */
-body::before {
-  content: "";
-  position: fixed; inset: 0;
-  background: url("https://grainy-gradients.vercel.app/noise.png");
-  mix-blend-mode: overlay;
-  opacity: .25;
-  pointer-events: none;
-}
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      display: block;
+    }
+
     #sphere-container {
-    width: 300px;
-    height: 300px;
-    margin: 2rem auto;
-  }
-
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem 4rem; position: relative; z-index: 2; }
-
-    /* Gothic Header (letters squirm, box stays still) */
-    .marquee {
-      font-family: 'UnifrakturCook', cursive; color: var(--ink);
-      font-size: clamp(2.2rem, 5vw + 1rem, 4.4rem); text-align: center; letter-spacing: .06em;
-      margin: 1rem 0 1.4rem; text-shadow: 0 0 12px rgba(214,26,26,.55);
-      filter: url(#squirmText);
+      width: 300px;
+      height: 300px;
+      margin: 2rem auto;
     }
 
-    /* Panels: frame is drawn on :before so only the line squirm-waves */
-    .panels { display: grid; gap: clamp(1rem, 3vw, 2.2rem); grid-template-columns: repeat(3, 1fr); align-items: stretch; margin: clamp(1rem, 3vw, 2rem) auto 2.4rem; max-width: 1100px; }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1rem 3rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .panels {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: stretch;
+      margin: 1rem auto 2rem;
+      max-width: 1000px;
+    }
+
     .panel {
-  position: relative;
-  min-height: 260px;  /* shorter height */
-  background: repeating-linear-gradient(to bottom, #14141a 0 28px, #0f0f14 28px 30px);
-  display: grid;
-  place-items: center;
-  overflow:hidden;
-}
-    .panel::before { content:""; position:absolute; inset:-6px; pointer-events:none; border-radius: 6px; border: 6px double var(--ink); box-shadow: inset 0 0 0 2px rgba(214,26,26,.45), 0 10px 40px rgba(0,0,0,.6); filter: url(#squirmBorder); }
-    .panel:hover { transform: translateY(-3px); }
+      position: relative;
+      min-height: 260px; /* shorter */
+      background: rgba(10,10,15,0.8);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 4px double var(--ink);
+      box-shadow: 0 0 20px rgba(214,26,26,.6);
+    }
 
-    .panel-label { font-family: 'UnifrakturCook', cursive; color: var(--ink); font-size: clamp(1.8rem, 2.6vw + .6rem, 2.6rem); user-select: none; pointer-events: none; text-shadow: 0 0 8px rgba(214,26,26,.55); filter: url(#squirmText); }
+    .panel-label {
+      font-family: 'UnifrakturCook', cursive;
+      font-size: 2rem;
+      color: var(--ink);
+      text-shadow: 0 0 8px rgba(214,26,26,.55);
+      user-select: none;
+    }
 
-    .panel a { position:absolute; inset:0; }
+    .panel a {
+      position:absolute;
+      inset:0;
+    }
 
-    /* Bottom tomb-plaque */
-    .ticker-wrap { max-width: 920px; margin: 2rem auto 0; padding: .55rem 1rem; border-radius: 6px; background: #0f1114; position:relative; color: var(--ink); }
-    .ticker-wrap::before { content:""; position:absolute; inset:-6px; border-radius:6px; border: 6px double var(--ink); box-shadow: inset 0 0 0 2px rgba(214,26,26,.45); filter: url(#squirmBorder); }
-    .ticker { font-family: 'UnifrakturCook', cursive; text-align: center; font-size: clamp(.9rem, .8vw + .6rem, 1.1rem); line-height: 1.35; filter: url(#squirmText); }
+    .ticker-wrap {
+      max-width: 800px;
+      margin: 2rem auto 0;
+      padding: .55rem 1rem;
+      border: 3px double var(--ink);
+      background: rgba(15,15,20,0.9);
+      color: var(--ink);
+      text-align: center;
+      font-family: 'UnifrakturCook', cursive;
+    }
 
-    footer { text-align:center; color:var(--ink); font-size:.85rem; margin-top: 2rem; opacity:.85; filter: url(#squirmText); }
+    footer {
+      text-align:center;
+      color:var(--ink);
+      font-size:.85rem;
+      margin-top: 1rem;
+    }
 
-    @media (max-width: 1000px) { .panels { grid-template-columns: 1fr; max-width: 640px; } .panel { min-height: 260px; } }
+    @media (max-width: 900px) {
+      .panels { grid-template-columns: 1fr; }
+      .panel { min-height: 180px; }
+    }
   </style>
-
-  <!-- SVG squirm filters -->
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <filter id="squirmText">
-        <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="2" seed="3">
-          <animate attributeName="baseFrequency" values="0.004;0.007;0.005;0.006" dur="6s" repeatCount="indefinite"/>
-          <animate attributeName="seed" values="1;2;3;4;5;6" dur="12s" repeatCount="indefinite"/>
-        </feTurbulence>
-        <feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G">
-          <animate attributeName="scale" values="3;8;4;6" dur="6s" repeatCount="indefinite"/>
-        </feDisplacementMap>
-      </filter>
-      <filter id="squirmBorder">
-        <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="2" seed="9">
-          <animate attributeName="baseFrequency" values="0.006;0.012;0.007;0.009" dur="7s" repeatCount="indefinite"/>
-        </feTurbulence>
-        <feDisplacementMap in="SourceGraphic" scale="10" xChannelSelector="B" yChannelSelector="A">
-          <animate attributeName="scale" values="6;14;8;10" dur="7s" repeatCount="indefinite"/>
-        </feDisplacementMap>
-      </filter>
-    </defs>
-  </svg>
 </head>
 <body>
+  <!-- animated glitch background -->
+  <canvas id="bg-canvas"></canvas>
+
   <main class="wrap">
-     <div id="sphere-container"></div>
+    <div id="sphere-container"></div>
 
     <section class="panels">
-      <div class="panel" id="words">
+      <div class="panel">
         <span class="panel-label">Words</span>
-        <a href="words/" aria-label="Enter Words"></a>
+        <a href="words/"></a>
       </div>
-      <div class="panel" id="images">
+      <div class="panel">
         <span class="panel-label">Images</span>
-        <a href="images/" aria-label="Enter Images"></a>
+        <a href="images/"></a>
       </div>
-      <div class="panel" id="sounds">
+      <div class="panel">
         <span class="panel-label">Sounds</span>
-        <a href="sounds/" aria-label="Enter Sounds"></a>
+        <a href="sounds/"></a>
       </div>
     </section>
 
-    <div class="ticker-wrap">
-      <div class="ticker">Stop and smell the roses</div>
-    </div>
-
+    <div class="ticker-wrap">Stop and smell the roses</div>
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
 
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+  <!-- Import map for three.js -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js"
+    }
+  }
   </script>
 
-<!-- import map (leave this exactly as-is) -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  <script type="module">
+  import * as THREE from "three";
+
+  // --- BACKGROUND SHADER ---
+  const bgCanvas = document.getElementById("bg-canvas");
+  const bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas });
+  bgRenderer.setSize(window.innerWidth, window.innerHeight);
+  const bgScene = new THREE.Scene();
+  const bgCamera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+
+  const uniforms = {
+    u_time: { value: 0.0 },
+    u_res:  { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+  };
+
+  const bgMat = new THREE.ShaderMaterial({
+    uniforms,
+    fragmentShader: `
+      precision mediump float;
+      uniform float u_time;
+      uniform vec2 u_res;
+
+      float noise(vec2 p) {
+        return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453);
+      }
+
+      void main() {
+        vec2 uv = gl_FragCoord.xy / u_res.xy;
+        float t = u_time * 0.3;
+
+        float wave = sin(uv.y*25.0 + t*5.0) + cos(uv.y*20.0 - t*4.0);
+        float n = noise(uv*80.0 + t);
+
+        float intensity = wave*0.5 + n*0.8;
+
+        vec3 col;
+        if(intensity > 0.6) col = vec3(1.0,0.0,0.0);     // red
+        else if(intensity > 0.2) col = vec3(0.9);        // white
+        else if(intensity > -0.2) col = vec3(0.3);       // gray
+        else col = vec3(0.0);                            // black
+
+        gl_FragColor = vec4(col,1.0);
+      }
+    `
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat);
+  bgScene.add(quad);
+
+  function bgAnimate(t) {
+    uniforms.u_time.value = t * 0.001;
+    bgRenderer.setSize(window.innerWidth, window.innerHeight);
+    uniforms.u_res.value.set(window.innerWidth, window.innerHeight);
+    bgRenderer.render(bgScene, bgCamera);
+    requestAnimationFrame(bgAnimate);
   }
-}
-</script>
+  bgAnimate();
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  // --- ORB SCENE ---
+  const container = document.getElementById("sphere-container");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+  camera.position.z = 3;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  // use the background canvas as envMap
+  const bgTex = new THREE.CanvasTexture(bgCanvas);
+  bgTex.mapping = THREE.EquirectangularReflectionMapping;
+
+  const material = new THREE.MeshStandardMaterial({
+    metalness: 1,
+    roughness: 0.0,
+    envMap: bgTex,
+    envMapIntensity: 2.8
+  });
+
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
+  scene.add(sphere);
+
+  // three orbiting lights
+  const red = new THREE.PointLight(0xff3a3a, 1.5);
+  const white = new THREE.PointLight(0xffffff, 1.2);
+  const blue = new THREE.PointLight(0x66ccff, 1.0);
+  scene.add(red, white, blue);
+
+  // animate orb + lights
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = performance.now() * 0.001;
+
+    sphere.rotation.y = t * 1.2;
+    sphere.rotation.x = Math.sin(t*0.8)*0.2;
+    sphere.rotation.z = Math.cos(t*0.6)*0.15;
+
+    red.position.set(Math.cos(t*1.1)*3, Math.sin(t*1.1)*3, 3);
+    white.position.set(Math.cos(t*0.7+2)*2.5, Math.sin(t*0.9+1)*2.5, 3);
+    blue.position.set(Math.cos(t*1.5)*2.8, Math.sin(t*1.3)*2.8, Math.cos(t*1.1)*2.8);
+
+    bgTex.needsUpdate = true; // refresh envMap
+    renderer.render(scene, camera);
   }
-}
-</script>
+  animate();
 
-<script type="module">
-import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-
-const container = document.getElementById("sphere-container");
-
-// Scene / camera / renderer
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-camera.position.set(0, 0, 3.2);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.45;
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x000000, 0);
-renderer.setSize(300, 300);
-container.appendChild(renderer.domElement);
-
-const bgCanvas = document.createElement("canvas");
-bgCanvas.width = 512;
-bgCanvas.height = 512;
-const bgCtx = bgCanvas.getContext("2d");
-const bgTex = new THREE.CanvasTexture(bgCanvas);
-bgTex.mapping = THREE.EquirectangularReflectionMapping;
-bgTex.wrapS = THREE.RepeatWrapping;
-bgTex.wrapT = THREE.RepeatWrapping;
-
-// update canvas stripes every frame
-function updateBG(t) {
-  const h = bgCanvas.height, w = bgCanvas.width;
-  const stripeHeight = 16;
-  for (let y = 0; y < h; y += stripeHeight) {
-    const r = Math.floor(100+155*Math.sin((y/40)+t*0.2));
-    const g = Math.floor(50+100*Math.sin((y/60)+t*0.3));
-    const b = Math.floor(50+200*Math.sin((y/80)+t*0.5));
-    bgCtx.fillStyle = `rgb(${r},${g},${b})`;
-    bgCtx.fillRect(0, y, w, stripeHeight);
-  }
-  bgTex.needsUpdate = true;
-}
-
-// Reflective environment
-const pmrem = new THREE.PMREMGenerator(renderer);
-const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environment = envMap;
-
-// Ultra-chrome material
-const material = new THREE.MeshStandardMaterial({
-  metalness: 1,
-  roughness: 0.0,
-  envMap: bgTex,
-  envMapIntensity: 2.8
-});
-
-const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
-scene.add(sphere);
-
-// Lights (animated)
-const red = new THREE.PointLight(0xff3a3a, 1.6);
-const white = new THREE.PointLight(0xffffff, 1.1);
-scene.add(red, white);
-const blue = new THREE.PointLight(0x66ccff, 1.0); // cool blue/white accent
-scene.add(blue);
-
-// Ambient fill so the dark side isn’t dead
-scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.6));
-
-// Animate: spin + wobble + **orbiting lights** + slight camera drift
-function animate() {
-  requestAnimationFrame(animate);
-  const t = performance.now() * 0.001;
-
-  // Obvious rotation
-  sphere.rotation.y = t * 1.4;
-  sphere.rotation.x = Math.sin(t * 0.9) * 0.22;
-  sphere.rotation.z = Math.cos(t * 0.7) * 0.12;
-
-  // Move highlights: lights orbit the sphere
-  const r1 = 3.8, r2 = 3.2;
-  red.position.set(Math.cos(t*1.1)*r1, Math.sin(t*0.9)*r1, 3.8);
-  white.position.set(Math.cos(t*0.8+Math.PI)*r2, Math.sin(t*1.3+0.6)*r2, 3.0);
-  blue.position.set(Math.cos(t*1.5)*3.0, Math.sin(t*1.7)*3.0, Math.cos(t*1.2)*2.5);
-
-  // Tiny camera bob so parallax sells it
-  camera.position.x = Math.sin(t*0.3) * 0.08;
-  camera.position.y = Math.cos(t*0.27) * 0.05;
-  camera.lookAt(0,0,0);
-
-  renderer.render(scene, camera);
-  updateBG(t); // refresh glitch env each frame
-}
-animate();
-
-// Keep canvas square on resize
-new ResizeObserver(() => {
-  const s = Math.min(container.clientWidth || 300, container.clientHeight || 300) || 300;
-  renderer.setSize(s, s);
-  camera.aspect = 1;
-  camera.updateProjectionMatrix();
-}).observe(container);
-</script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>

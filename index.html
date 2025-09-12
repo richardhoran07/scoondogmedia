@@ -7,13 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
-
   <style>
     :root { --ink: #d61a1a; }
 
     html, body {
-      margin: 0;
-      height: 100%;
+      margin: 0; height: 100%;
       font-family: 'Inter', sans-serif;
       color: #ffd7d7;
       background: black;
@@ -21,62 +19,46 @@
     }
 
     #bg-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      display: block;
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0; display: block;
     }
 
     #sphere-container {
-      width: 320px;
-      height: 320px;
+      width: 320px; height: 320px;
       margin: 2rem auto;
-      z-index: 2;
-      position: relative;
+      z-index: 2; position: relative;
     }
 
     .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
+      max-width: 1200px; margin: 0 auto;
       padding: 1rem 1rem 3rem;
-      position: relative;
-      z-index: 2;
+      position: relative; z-index: 2;
     }
 
     .panels {
-      display: grid;
-      gap: 1.5rem;
+      display: grid; gap: 1.5rem;
       grid-template-columns: repeat(3, 1fr);
-      align-items: stretch;
       margin: 1rem auto 2rem;
       max-width: 1000px;
     }
-
     .panel {
-      position: relative;
       min-height: 220px;
       background: rgba(10,10,15,0.8);
-      display: grid;
-      place-items: center;
+      display: grid; place-items: center;
       border: 4px double var(--ink);
       box-shadow: 0 0 20px rgba(214,26,26,.6);
+      position: relative;
     }
-
     .panel-label {
       font-family: 'UnifrakturCook', cursive;
-      font-size: 2rem;
-      color: var(--ink);
+      font-size: 2rem; color: var(--ink);
       text-shadow: 0 0 8px rgba(214,26,26,.55);
-      user-select: none;
     }
-
     .panel a { position:absolute; inset:0; }
 
     .ticker-wrap {
-      max-width: 800px;
-      margin: 2rem auto 0;
+      max-width: 800px; margin: 2rem auto 0;
       padding: .55rem 1rem;
       border: 3px double var(--ink);
       background: rgba(15,15,20,0.9);
@@ -84,33 +66,22 @@
       text-align: center;
       font-family: 'UnifrakturCook', cursive;
     }
-
     footer {
-      text-align:center;
-      color:var(--ink);
-      font-size:.85rem;
-      margin-top: 1rem;
-    }
-
-    @media (max-width: 900px) {
-      .panels { grid-template-columns: 1fr; }
-      .panel { min-height: 160px; }
+      text-align:center; color:var(--ink);
+      font-size:.85rem; margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <!-- starfield -->
   <canvas id="bg-canvas"></canvas>
 
   <main class="wrap">
     <div id="sphere-container"></div>
-
     <section class="panels">
       <div class="panel"><span class="panel-label">Words</span><a href="words/"></a></div>
       <div class="panel"><span class="panel-label">Images</span><a href="images/"></a></div>
       <div class="panel"><span class="panel-label">Sounds</span><a href="sounds/"></a></div>
     </section>
-
     <div class="ticker-wrap">Stop and smell the roses</div>
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
@@ -129,77 +100,58 @@
   <script type="module">
   import * as THREE from "three";
 
-  // --- STARFIELD BACKGROUND ---
+  // --- STARFIELD ---
   const bgCanvas = document.getElementById("bg-canvas");
   const ctx = bgCanvas.getContext("2d");
-  function resizeBG() {
-    bgCanvas.width = window.innerWidth;
-    bgCanvas.height = window.innerHeight;
-  }
-  window.addEventListener("resize", resizeBG);
-  resizeBG();
+  function resizeBG(){ bgCanvas.width=innerWidth; bgCanvas.height=innerHeight; }
+  window.addEventListener("resize", resizeBG); resizeBG();
 
-  const stars = Array.from({length: 500}).map(() => ({
+  const stars = Array.from({length: 400}).map(()=>({
     x: Math.random()*bgCanvas.width,
     y: Math.random()*bgCanvas.height,
-    r: Math.random()*1.8+0.5,
-    color: ["#ccc","#aaa","#99bbee","#dddddd","#999"][Math.floor(Math.random()*5)],
-    twinkle: Math.random()*1000
+    r: Math.random()*1.6+0.4,
+    color: ["#bbb","#999","#ccddee","#ddd","#aaa"][Math.floor(Math.random()*5)],
+    tw: Math.random()*1000
   }));
-
-  function drawStars(time) {
-    ctx.fillStyle = "black";
-    ctx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
-
-    for (let s of stars) {
-      const flicker = 0.6+0.4*Math.sin((time*0.002)+s.twinkle);
-      ctx.fillStyle = s.color;
-      ctx.globalAlpha = flicker;
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
+  function drawStars(time){
+    ctx.fillStyle="black"; ctx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    for(const s of stars){
+      const flick=0.5+0.5*Math.sin(time*0.002+s.tw);
+      ctx.fillStyle=s.color; ctx.globalAlpha=flick;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    } ctx.globalAlpha=1;
   }
+  (function loop(t){ drawStars(t); requestAnimationFrame(loop); })(0);
 
-  function bgLoop(time){
-    drawStars(time);
-    requestAnimationFrame(bgLoop);
+  // --- ORB ---
+  const cont=document.getElementById("sphere-container");
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(45,1,0.1,1000);
+  camera.position.z=3;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(cont.clientWidth,cont.clientHeight);
+  cont.appendChild(renderer.domElement);
+
+  // Fake cosmic gradient env
+  const size=16;
+  const data=new Uint8Array(3*size*size*6).fill(0);
+  for(let i=0;i<data.length;i+=3){
+    data[i]=Math.floor(100+Math.random()*80);     // R
+    data[i+1]=Math.floor(100+Math.random()*80);   // G
+    data[i+2]=Math.floor(120+Math.random()*120);  // B
   }
-  bgLoop();
+  const envTex=new THREE.DataTextureCube(data,size,size);
+  envTex.needsUpdate=true;
 
-  // --- ORB: shiny chrome with real envMap ---
-  const container = document.getElementById("sphere-container");
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-  camera.position.z = 3;
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  container.appendChild(renderer.domElement);
-
-  // Bright cube map
-  const envTex = new THREE.CubeTextureLoader()
-    .setPath("https://threejs.org/examples/textures/cube/Bridge2/")
-    .load([
-      "posx.jpg","negx.jpg",
-      "posy.jpg","negy.jpg",
-      "posz.jpg","negz.jpg"
-    ]);
-
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    metalness: 1,
-    roughness: 0.0,
-    envMap: envTex,
-    envMapIntensity: 2.5
+  const mat=new THREE.MeshStandardMaterial({
+    color:0xffffff, metalness:1, roughness:0.0,
+    envMap:envTex, envMapIntensity:3.0
   });
-
-  const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), material);
+  const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
   scene.add(sphere);
 
-  // 7 orbiting lights
-  const lights = [
+  // orbiting lights
+  const lights=[
     new THREE.PointLight(0xff4444,1.5),
     new THREE.PointLight(0xffffff,1.3),
     new THREE.PointLight(0x66ccff,1.2),
@@ -207,47 +159,36 @@
     new THREE.PointLight(0xff66ff,1.2),
     new THREE.PointLight(0x99ff66,1.0),
     new THREE.PointLight(0x8888ff,1.0)
-  ];
-  lights.forEach(l => scene.add(l));
+  ]; lights.forEach(l=>scene.add(l));
 
-  function animate() {
+  function animate(){
     requestAnimationFrame(animate);
-    const t = performance.now() * 0.001;
-
-    sphere.rotation.y = t * 1.0;
-    sphere.rotation.x = Math.sin(t*0.7)*0.25;
-    sphere.rotation.z = Math.cos(t*0.5)*0.2;
-
-    lights.forEach((light,i) => {
-      const radius = 3 + i*0.2;
-      const speed = 0.4 + i*0.15;
-      light.position.set(
-        Math.cos(t*speed + i)*radius,
-        Math.sin(t*speed + i*0.7)*radius,
-        Math.sin(t*speed*0.7 + i)*radius
-      );
+    const t=performance.now()*0.001;
+    sphere.rotation.y=t*1.0;
+    sphere.rotation.x=Math.sin(t*0.7)*0.25;
+    sphere.rotation.z=Math.cos(t*0.5)*0.2;
+    lights.forEach((l,i)=>{
+      const r=3+i*0.2,s=0.4+i*0.15;
+      l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.7+i)*r);
     });
+    renderer.render(scene,camera);
+  } animate();
 
-    renderer.render(scene, camera);
-  }
-  animate();
+  // --- AUDIO ---
+  const audio=document.getElementById("bg-audio");
+  audio.volume=0.7;
+  const unlock=()=>{
+    audio.muted=false;
+    audio.play().catch(err=>console.log("Audio error:",err));
+    document.removeEventListener("mousemove",unlock);
+    document.removeEventListener("touchstart",unlock);
+    document.removeEventListener("click",unlock);
+  };
+  document.addEventListener("mousemove",unlock,{once:true});
+  document.addEventListener("touchstart",unlock,{once:true});
+  document.addEventListener("click",unlock,{once:true});
 
-  // --- AUDIO: unlock on first mouse move or touch ---
-  const audio = document.getElementById("bg-audio");
-  audio.volume = 0.7;
-  audio.play().catch(() => {
-    const unlock = () => {
-      audio.muted = false;
-      audio.play().catch(err => console.log("Audio error:", err));
-      document.removeEventListener("mousemove", unlock);
-      document.removeEventListener("touchstart", unlock);
-    };
-    document.addEventListener("mousemove", unlock, { once: true });
-    document.addEventListener("touchstart", unlock, { once: true });
-  });
-
-  document.getElementById('year').textContent = new Date().getFullYear();
+  document.getElementById('year').textContent=new Date().getFullYear();
   </script>
 </body>
 </html>
-

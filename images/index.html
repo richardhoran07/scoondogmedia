@@ -7,42 +7,53 @@
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     body { margin:0; background:black; overflow-x:hidden; color:#ffd7d7; font-family:'Inter',sans-serif; }
-    #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
-    #audio-controls { display:flex; justify-content:center; align-items:center; gap:.5rem; margin:1rem; font-family:'UnifrakturCook',cursive; color:#d61a1a; }
-    #audio-controls select, #audio-controls button { background:black; color:#d61a1a; border:2px solid #d61a1a; padding:.2rem .4rem; font-family:inherit; }
-    .gallery img { display:block; width:100%; max-width:1000px; margin:2rem auto; box-shadow:0 0 20px rgba(214,26,26,0.6); border:3px double #d61a1a; }
-    footer { text-align:center; color:#d61a1a; margin-top:1rem; }
-    .back-btn {
-      display:inline-block;
-      margin:1rem;
-      padding:.4rem .8rem;
-      border:2px double #d61a1a;
-      color:#d61a1a;
-      background:black;
-      text-decoration:none;
-      font-family:'UnifrakturCook',cursive;
-      box-shadow:0 0 10px rgba(214,26,26,.6);
-      #bg-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;   /* always behind */
-  display: block;
-}
 
-main, .wrap, #audio-controls, .gallery, footer, h1, p {
-  position: relative;
-  z-index: 1;    /* force on top */
-}
+    /* ⭐ keep the starfield canvas BEHIND everything */
+    #bg-canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: -1;              /* <- behind */
+      display: block;
+      pointer-events: none;     /* don't block clicks/scroll */
+    }
+
+    /* ⭐ make page content sit ABOVE the canvas */
+    main, #audio-controls, .gallery, footer, h1, p {
+      position: relative;
+      z-index: 1;
+    }
+
+    #audio-controls {
+      display:flex; justify-content:center; align-items:center; gap:.5rem;
+      margin:1rem; font-family:'UnifrakturCook',cursive; color:#d61a1a;
+    }
+    #audio-controls select, #audio-controls button {
+      background:black; color:#d61a1a; border:2px solid #d61a1a;
+      padding:.2rem .4rem; font-family:inherit;
+    }
+
+    .gallery img {
+      display:block; width:100%; max-width:1000px; margin:2rem auto;
+      box-shadow:0 0 20px rgba(214,26,26,0.6); border:3px double #d61a1a;
+    }
+
+    footer { text-align:center; color:#d61a1a; margin-top:1rem; }
+
+    .back-btn {
+      display:inline-block; margin:1rem; padding:.4rem .8rem;
+      border:2px double #d61a1a; color:#d61a1a; background:black;
+      text-decoration:none; font-family:'UnifrakturCook',cursive;
+      box-shadow:0 0 10px rgba(214,26,26,.6);
     }
     .back-btn:hover { background:#111; }
   </style>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
+
   <main>
     <a href="../" class="back-btn">⬅ Back</a>
+
     <div id="audio-controls">
       <select id="track-select">
         <option value="../sounds/background.mp3">background.mp3</option>
@@ -51,16 +62,22 @@ main, .wrap, #audio-controls, .gallery, footer, h1, p {
       </select>
       <button id="play-btn">▶ Play</button>
     </div>
-    <h1 style="font-family:'UnifrakturCook',cursive;color:#d61a1a;">IMAGES</h1>
+
+    <h1 style="font-family:'UnifrakturCook',cursive;color:#d61a1a;text-align:center;">IMAGES</h1>
     <div class="gallery" id="gallery"></div>
+
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
+
   <audio id="bg-audio" loop></audio>
+
   <script type="importmap">
   { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js" } }
   </script>
   <script type="module" src="../common.js"></script>
+
   <script>
+  // Use the double-images path you confirmed: images/images/full/...
   const FILES = [
     "2025.jpg",
     "masterpiece.jpg",
@@ -70,12 +87,12 @@ main, .wrap, #audio-controls, .gallery, footer, h1, p {
     "Cat.jpg",
     "IslandBoy.jpg"
   ];
-  const gallery=document.getElementById("gallery");
-  FILES.forEach(f=>{
-    const img=document.createElement("img");
-    img.src="images/full/"+f;
-    img.alt=f;
-    img.onerror=()=>console.error("Missing image:", img.src);
+  const gallery = document.getElementById("gallery");
+  FILES.forEach(f => {
+    const img = document.createElement("img");
+    img.src = "images/full/" + f;   // index.html is in /images/, so this resolves to /images/images/full/...
+    img.alt = f;
+    img.onerror = () => console.error("Missing image:", img.src);
     gallery.appendChild(img);
   });
   </script>

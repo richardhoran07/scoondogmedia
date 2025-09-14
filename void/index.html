@@ -1,90 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Entertainment Zone | SCOONDOG156</title>
-  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entertainment</title>
   <style>
     body {
       margin: 0;
       background: black;
-      color: #d61a1a;
-      font-family: 'UnifrakturCook', cursive;
-    }
-    a.back-btn {
-      display:inline-block;
-      margin:1rem;
-      padding:.4rem .8rem;
-      border:2px double #d61a1a;
-      color:#d61a1a;
-      background:black;
-      text-decoration:none;
-      box-shadow:0 0 10px rgba(214,26,26,.6);
-    }
-    a.back-btn:hover { background:#111; }
-
-    h1 {
-      text-align:center;
-      margin:1rem 0;
-      font-size:2rem;
-    }
-
-    .grid {
-      display:grid;
+      display: grid;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap:10px;
-      padding:10px;
+      grid-auto-rows: 1fr;
+      gap: 2px;
     }
     video {
-      width:100%;
-      height:auto;
-      background:#000;
-      border:2px solid #d61a1a;
-      box-shadow:0 0 15px rgba(214,26,26,.5);
-    }
-
-    footer {
-      text-align:center;
-      margin:2rem 0;
-      font-size:.9rem;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
     }
   </style>
 </head>
 <body>
-  <a href="../" class="back-btn">⬅ Back</a>
-  <h1>ENTERTAINMENT ZONE</h1>
 
-  <div class="grid" id="void-grid"></div>
-
-  <footer>© <span id="year"></span> SCOONDOG156</footer>
+  <!-- JS will populate the grid with videos -->
 
   <script>
-    const FILES = [
-      "war.mp4",
-      "mukbang.mp4",
-      "vlog.mp4",
-      "cartoon.mp4",
-      "gameplay.mp4",
-      "cctv.mp4"
-      // add more .mp4s here
+    // List of your uploaded videos in entertainment/videos/
+    const VIDEOS = [
+      "videos/clip1.mp4",
+      "videos/clip2.mp4",
+      "videos/clip3.mp4",
+      "videos/clip4.mp4",
+      "videos/clip5.mp4"
+      // keep adding as you record more
     ];
 
-    const grid=document.getElementById("void-grid");
-    FILES.forEach(f=>{
-      const vid=document.createElement("video");
-      vid.src="videos/"+f;
-      vid.autoplay=true;
-      vid.loop=true;
-      vid.muted=true;
-      vid.playsInline=true;
-      grid.appendChild(vid);
-    });
+    const NUM_VIDEOS = 12; // how many grid cells you want visible
 
-    document.getElementById("year").textContent=new Date().getFullYear();
+    function randomVideo() {
+      return VIDEOS[Math.floor(Math.random() * VIDEOS.length)];
+    }
+
+    function createVideo() {
+      const video = document.createElement("video");
+      video.src = randomVideo();
+      video.autoplay = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.onended = () => {
+        video.src = randomVideo();
+        video.play();
+      };
+      return video;
+    }
+
+    for (let i = 0; i < NUM_VIDEOS; i++) {
+      document.body.appendChild(createVideo());
+    }
   </script>
-</body>
-</html>
-  </script>
+
 </body>
 </html>

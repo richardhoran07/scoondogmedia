@@ -1,53 +1,52 @@
-// Massive curated firehose of "humanity"
-const STATIC_SOURCES = [
-  // --- Lo-fi / Chill / Music streams ---
-  "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1",
+const SOURCES = [
+  // 🌌 Space / Earth feeds
   "https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1&mute=1", // NASA live
+  "https://www.youtube.com/embed/DDU-rZs-Ic4?autoplay=1&mute=1", // Earth from ISS
+  "https://www.youtube.com/embed/XBPjVzSoepo?autoplay=1&mute=1", // SpaceX stream sample
 
-  // --- News / Reality ---
-  "https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1", // BBC
-  "https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1&mute=1", // NASA
-  "https://www.youtube.com/embed/y60wDzZt8yg?autoplay=1&mute=1", // ISS live
+  // 🎶 Music / Lo-Fi / Vibes
+  "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1", // Lo-fi hip hop
+  "https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1", // Lo-fi beats
+  "https://www.youtube.com/embed/7NOSDKb0HlU?autoplay=1&mute=1", // Chillhop livestream
+  "https://www.youtube.com/embed/36YnV9STBqc?autoplay=1&mute=1", // 24/7 jazz & coffee
 
-  // --- War / Documentaries ---
-  "https://www.youtube.com/embed/8ZcmTl_1ER8?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/qyJdH6glVlw?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/Sl9ZtY2hK6o?autoplay=1&mute=1",
+  // 📰 News
+  "https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1", // Sky News live
+  "https://www.youtube.com/embed/5YXVMCHG-Nk?autoplay=1&mute=1", // ABC News live
+  "https://www.youtube.com/embed/Ue5qdxz4wlg?autoplay=1&mute=1", // France24 live
 
-  // --- Mukbangs / ASMR food ---
-  "https://www.youtube.com/embed/7wNPlWuVWfw?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/x79XXtT5s5o?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/q8u0k0WkF3A?autoplay=1&mute=1",
+  // 📺 Random cultural noise
+  "https://www.youtube.com/embed/ZZ5LpwO-An4?autoplay=1&mute=1", // He-Man heyayay
+  "https://www.youtube.com/embed/aqz-KE-bpKQ?autoplay=1&mute=1", // Big Buck Bunny (classic open movie)
+  "https://www.youtube.com/embed/tPEE9ZwTmy0?autoplay=1&mute=1", // People are Awesome
+  "https://www.youtube.com/embed/_OBlgSz8sSM?autoplay=1&mute=1", // Charlie bit my finger
 
-  // --- Cartoons / Anime / Kids ---
-  "https://www.youtube.com/embed/IUN664s7N-c?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/HgzGwKwLmgM?autoplay=1&mute=1",
+  // 🕹 Gameplay / Twitch-like vibes
+  "https://www.youtube.com/embed/-TzdDFe7Q64?autoplay=1&mute=1", // Minecraft longplay
+  "https://www.youtube.com/embed/tgbNymZ7vqY?autoplay=1&mute=1", // Funny cats (lol filler)
+  "https://www.youtube.com/embed/lXMskKTw3Bc?autoplay=1&mute=1", // Rick Astley rickroll
 
-  // --- Games / Twitch VOD vibes ---
-  "https://www.youtube.com/embed/0j6zGf3zK1E?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/E7wJTI-1dvQ?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/NlOfNsxB4IU?autoplay=1&mute=1",
+  // 🍜 Mukbang / food
+  "https://www.youtube.com/embed/Z3ZAGBL6UBA?autoplay=1&mute=1", // Korean street food
+  "https://www.youtube.com/embed/oHg5SJYRHA0?autoplay=1&mute=1", // meme insert
 
-  // --- Random internet ephemera ---
-  "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1",
-  "https://www.youtube.com/embed/tgbNymZ7vqY?autoplay=1&mute=1",
-
-  // --- Local mp4s if you want to host loops ---
-  "videos/loop1.mp4",
-  "videos/loop2.mp4",
-  "videos/loop3.mp4",
-
-  // ... Extend to ~400 entries (music, politics, memes, nature cams, CCTV dumps)
+  // 🏙 City cams
+  "https://www.youtube.com/embed/WmCzZQ8E0pQ?autoplay=1&mute=1", // Shibuya live cam
+  "https://www.youtube.com/embed/84NI5fjTfpQ?autoplay=1&mute=1", // NYC Times Square live
 ];
 
-// Shuffle + export
-async function loadSources() {
-  window.SOURCES = STATIC_SOURCES.slice();
-
-  // shuffle
-  for (let i = window.SOURCES.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [window.SOURCES[i], window.SOURCES[j]] = [window.SOURCES[j], window.SOURCES[i]];
-  }
-}
+// Grid builder
+window.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("void-grid");
+  SOURCES.forEach(src => {
+    const frame = document.createElement("iframe");
+    frame.src = src;
+    frame.frameBorder = "0";
+    frame.allow =
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    frame.allowFullscreen = true;
+    frame.width = "560";
+    frame.height = "315";
+    container.appendChild(frame);
+  });
+});

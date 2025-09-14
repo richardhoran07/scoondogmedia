@@ -1,52 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Entertainment | SCOONDOG156</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entertainment Void | SCOONDOG156</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #d61a1a;
+      font-family: 'UnifrakturCook', cursive;
+    }
+    a.back-btn {
+      display:inline-block;
+      margin:1rem;
+      padding:.4rem .8rem;
+      border:2px double #d61a1a;
+      color:#d61a1a;
+      background:black;
+      text-decoration:none;
+      box-shadow:0 0 10px rgba(214,26,26,.6);
+    }
+    a.back-btn:hover { background:#111; }
+
+    h1 {
+      text-align:center;
+      margin:1rem 0;
+      font-size:2rem;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap:10px;
+      padding:10px;
+    }
+    video {
+      width:100%;
+      height:auto;
+      background:#000;
+      border:2px solid #d61a1a;
+      box-shadow:0 0 15px rgba(214,26,26,.5);
+    }
+
+    footer {
+      text-align:center;
+      margin:2rem 0;
+      font-size:.9rem;
+    }
+  </style>
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
+  <a href="../" class="back-btn">⬅ Back</a>
+  <h1>ENTERTAINMENT VOID</h1>
 
-  <main>
-    <a href="../" class="back-btn">⬅ Back</a>
-    <h1 class="title">ENTERTAINMENT</h1>
+  <div class="grid" id="void-grid"></div>
 
-    <div id="entertainment-grid" class="grid"></div>
+  <footer>© <span id="year"></span> SCOONDOG156</footer>
 
-    <footer>© <span id="year"></span> SCOONDOG156</footer>
-  </main>
-
-  <script src="sources.js"></script>
   <script>
-    const grid = document.getElementById("entertainment-grid");
-    document.getElementById("year").textContent = new Date().getFullYear();
+    const FILES = [
+      "war.mp4",
+      "mukbang.mp4",
+      "vlog.mp4",
+      "cartoon.mp4",
+      "gameplay.mp4",
+      "cctv.mp4"
+      // add more .mp4s here
+    ];
 
-    (async () => {
-      await loadSources();
-      window.SOURCES.forEach(src => {
-        const cell = document.createElement("div");
-        cell.className = "cell";
+    const grid=document.getElementById("void-grid");
+    FILES.forEach(f=>{
+      const vid=document.createElement("video");
+      vid.src="videos/"+f;
+      vid.autoplay=true;
+      vid.loop=true;
+      vid.muted=true;
+      vid.playsInline=true;
+      grid.appendChild(vid);
+    });
 
-        if (src.endsWith(".mp4")) {
-          const v = document.createElement("video");
-          v.src = src;
-          v.autoplay = true;
-          v.muted = true;
-          v.loop = true;
-          cell.appendChild(v);
-        } else {
-          const iframe = document.createElement("iframe");
-          iframe.src = src;
-          iframe.allow = "autoplay; encrypted-media";
-          iframe.frameBorder = "0";
-          cell.appendChild(iframe);
-        }
-
-        grid.appendChild(cell);
-      });
-    })();
+    document.getElementById("year").textContent=new Date().getFullYear();
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>

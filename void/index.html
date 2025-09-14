@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Void | SCOONDOG156</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      font-family: 'UnifrakturCook', cursive;
+      color: red;
+    }
+    #bg-canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+    #void-container {
+      position: relative;
+      z-index: 1;
+    }
+    .window {
+      position: absolute;
+      border: 2px solid red;
+      box-shadow: 0 0 20px rgba(255,0,0,0.6);
+      overflow: hidden;
+      transform: rotate(var(--rot, 0deg));
+      background: black;
+    }
+    iframe, video {
+      width: 100%; height: 100%;
+      display: block;
+    }
+    #controls {
+      position: fixed;
+      top: 1rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: black;
+      border: 3px double red;
+      padding: 0.5rem 1rem;
+      box-shadow: 0 0 15px red;
+      cursor: pointer;
+      user-select: none;
+    }
+    #controls:hover { background: #111; }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="controls">▶ ENTERTAINMENT: OFF</div>
+  <div id="void-container"></div>
+
+  <script>
+    // --- Starfield ---
+    const bg = document.getElementById("bg-canvas");
+    const ctx = bg.getContext("2d");
+    function resize(){ bg.width=innerWidth; bg.height=innerHeight; }
+    window.addEventListener("resize", resize); resize();
+    const stars = Array.from({length:400},()=>({
+      x:Math.random()*bg.width, y:Math.random()*bg.height,
+      r:Math.random()*1.5+0.5, tw:Math.random()*1000
+    }));
+    function drawStars(t){
+      ctx.fillStyle="black"; ctx.fillRect(0,0,bg.width,bg.height);
+      for(const s of stars){
+        const a=0.5+0.5*Math.sin(t*0.002+s.tw);
+        ctx.fillStyle=`rgba(255,255,255,${a})`;
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+      }
+    }
+    (function loop(t){ drawStars(t); requestAnimationFrame(loop); })(0);
+
+    // --- Video Sources ---
+    const sources = [
+      "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1",
+      "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1",
+      "https://www.youtube.com/embed/V-_O7nl0Ii0?autoplay=1&mute=1",
+      "https://player.twitch.tv/?channel=xqc&parent=localhost", 
+      "https://player.twitch.tv/?channel=pokimane&parent=localhost", 
+      "videos/mukbang.mp4",
+      "videos/war.mp4",
+      "videos/cartoon.mp4",
+      "videos/redditstory.mp4",
+      "videos/vlog.mp4",
+      "videos/pornclip.mp4",   // replace or remove if you want it SFW
+      "videos/cctv.mp4"
+    ];
+
+    // --- Window Spawner ---
+    const container = document.getElementById("void-container");
+    let intervalId = null;
+
+    function spawnWindow(){
+      const win=document.createElement("div");
+      win.className="window";
+      win.style.width=(200+Math.random()*300)+"px";
+      win.style.height=(150+Math.random()*250)+"px";
+      win.style.left=(Math.random()*(window.innerWidth-200))+"px";
+      win.style.top=(Math.random()*(window.innerHeight-150))+"px";
+      win.style.setProperty("--rot",(Math.random()*20-10)+"deg");
+
+      const src = sources[Math.floor(Math.random()*sources.length)];
+      if(src.endsWith(".mp4")){
+        const vid=document.createElement("video");
+        vid.src=src; vid.autoplay=true; vid.loop=true; vid.muted=true;
+        win.appendChild(vid);
+      } else {
+        const iframe=document.createElement("iframe");
+        iframe.src=src; 
+        iframe.allow="autoplay; encrypted-media";
+        iframe.frameBorder="0";
+        win.appendChild(iframe);
+      }
+      container.appendChild(win);
+      setTimeout(()=>win.remove(),30000); // remove after 30s
+    }
+
+    // --- Entertainment Toggle ---
+    const btn = document.getElementById("controls");
+    let entertainmentOn = false;
+    btn.addEventListener("click", () => {
+      entertainmentOn = !entertainmentOn;
+      btn.textContent = entertainmentOn ? "⏸ ENTERTAINMENT: ON" : "▶ ENTERTAINMENT: OFF";
+
+      if(entertainmentOn){
+        intervalId = setInterval(spawnWindow, 2000); // every 2s
+      } else {
+        clearInterval(intervalId);
+        intervalId = null;
+        container.innerHTML = ""; // wipe everything
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,110 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Entertainment | SCOONDOG156</title>
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      font-family: sans-serif;
-      color: white;
-    }
-    #bg-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-    #void-container {
-      position: relative;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 8px;
-      padding: 10px;
-      z-index: 1;
-    }
-    .window {
-      position: relative;
-      border: 2px solid #d61a1a;
-      box-shadow: 0 0 15px rgba(214,26,26,0.6);
-      aspect-ratio: 16 / 9;
-      overflow: hidden;
-    }
-    iframe, video {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    #toggle {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: black;
-      border: 2px solid #d61a1a;
-      color: #d61a1a;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: 'UnifrakturCook', cursive;
-      z-index: 10;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
-  <button id="toggle">Entertainment: OFF</button>
-  <div id="void-container"></div>
+
+  <main>
+    <a href="../" class="back-btn">⬅ Back</a>
+    <h1 class="title">ENTERTAINMENT</h1>
+
+    <div id="entertainment-grid" class="grid"></div>
+
+    <footer>© <span id="year"></span> SCOONDOG156</footer>
+  </main>
 
   <script src="sources.js"></script>
   <script>
-    // starfield background
-    const bg=document.getElementById("bg-canvas"),ctx=bg.getContext("2d");
-    function resize(){ bg.width=innerWidth; bg.height=innerHeight; }
-    window.addEventListener("resize",resize); resize();
-    const stars=Array.from({length:500},()=>({x:Math.random()*bg.width,y:Math.random()*bg.height,r:Math.random()*1.5+0.5,tw:Math.random()*1000}));
-    function drawStars(t){
-      ctx.fillStyle="black"; ctx.fillRect(0,0,bg.width,bg.height);
-      for(const s of stars){
-        const a=0.5+0.5*Math.sin(t*0.002+s.tw);
-        ctx.fillStyle=`rgba(255,255,255,${a})`;
-        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
-      }
-    }
-    (function loop(t){ drawStars(t); requestAnimationFrame(loop); })(0);
+    const grid = document.getElementById("entertainment-grid");
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-    // entertainment windows
-    const container=document.getElementById("void-container");
-    let active=false;
+    (async () => {
+      await loadSources();
+      window.SOURCES.forEach(src => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
 
-    function spawnAll(){
-      container.innerHTML="";
-      SOURCES.forEach(src=>{
-        const win=document.createElement("div");
-        win.className="window";
-        if(src.endsWith(".mp4")){
-          const vid=document.createElement("video");
-          vid.src=src; vid.autoplay=true; vid.loop=true; vid.muted=true;
-          win.appendChild(vid);
+        if (src.endsWith(".mp4")) {
+          const v = document.createElement("video");
+          v.src = src;
+          v.autoplay = true;
+          v.muted = true;
+          v.loop = true;
+          cell.appendChild(v);
         } else {
-          const iframe=document.createElement("iframe");
-          iframe.src=src; iframe.allow="autoplay; encrypted-media";
-          win.appendChild(iframe);
+          const iframe = document.createElement("iframe");
+          iframe.src = src;
+          iframe.allow = "autoplay; encrypted-media";
+          iframe.frameBorder = "0";
+          cell.appendChild(iframe);
         }
-        container.appendChild(win);
-      });
-    }
 
-    document.getElementById("toggle").addEventListener("click",()=>{
-      active=!active;
-      if(active){
-        spawnAll();
-        toggle.textContent="Entertainment: ON";
-      }else{
-        container.innerHTML="";
-        toggle.textContent="Entertainment: OFF";
-      }
-    });
+        grid.appendChild(cell);
+      });
+    })();
   </script>
 </body>
 </html>

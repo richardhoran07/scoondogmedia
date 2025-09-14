@@ -74,24 +74,34 @@
 
     // --- Video Sources ---
     const sources = [
+      // YouTube chaos
       "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1",
-      "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1",
-      "https://www.youtube.com/embed/V-_O7nl0Ii0?autoplay=1&mute=1",
-      "https://player.twitch.tv/?channel=xqc&parent=localhost", 
-      "https://player.twitch.tv/?channel=pokimane&parent=localhost", 
+      "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1", // lo-fi
+      "https://www.youtube.com/embed/8ZcmTl_1ER8?autoplay=1&mute=1", // war footage
+      "https://www.youtube.com/embed/tgbNymZ7vqY?autoplay=1&mute=1", // silly demo
+      "https://www.youtube.com/embed/L_jWHffIx5E?autoplay=1&mute=1", // Smash Mouth
+      "https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1", // BBC News live
+      "https://www.youtube.com/embed/HgzGwKwLmgM?autoplay=1&mute=1", // Queen
+      "https://www.youtube.com/embed/Ke90Tje7VS0?autoplay=1&mute=1", // tech talk
+      "https://www.youtube.com/embed/IUN664s7N-c?autoplay=1&mute=1", // Spongebob clip
+      // Twitch
+      "https://player.twitch.tv/?channel=xqc&parent=localhost",
+      "https://player.twitch.tv/?channel=asmr_sounds&parent=localhost",
+      // Local dummy mp4s (replace with real ones)
       "videos/mukbang.mp4",
-      "videos/war.mp4",
-      "videos/cartoon.mp4",
-      "videos/redditstory.mp4",
+      "videos/war_archive.mp4",
+      "videos/gameplay.mp4",
+      "videos/hgtv_househunters.mp4",
       "videos/vlog.mp4",
-      "videos/pornclip.mp4",   // replace or remove if you want it SFW
+      "videos/redditstory.mp4",
+      "videos/pornclip.mp4",   // optional
       "videos/cctv.mp4"
     ];
 
-    // --- Window Spawner ---
     const container = document.getElementById("void-container");
     let intervalId = null;
 
+    // Spawn a video window
     function spawnWindow(){
       const win=document.createElement("div");
       win.className="window";
@@ -114,10 +124,10 @@
         win.appendChild(iframe);
       }
       container.appendChild(win);
-      setTimeout(()=>win.remove(),30000); // remove after 30s
+      setTimeout(()=>win.remove(),30000); // cleanup after 30s
     }
 
-    // --- Entertainment Toggle ---
+    // Toggle ON/OFF
     const btn = document.getElementById("controls");
     let entertainmentOn = false;
     btn.addEventListener("click", () => {
@@ -125,11 +135,13 @@
       btn.textContent = entertainmentOn ? "⏸ ENTERTAINMENT: ON" : "▶ ENTERTAINMENT: OFF";
 
       if(entertainmentOn){
-        intervalId = setInterval(spawnWindow, 2000); // every 2s
+        // preload chaos
+        for(let i=0;i<20;i++) spawnWindow();
+        intervalId = setInterval(spawnWindow, 2000);
       } else {
         clearInterval(intervalId);
         intervalId = null;
-        container.innerHTML = ""; // wipe everything
+        container.innerHTML = "";
       }
     });
   </script>

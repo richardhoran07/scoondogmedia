@@ -2,66 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The Void | SCOONDOG156</title>
+  <title>Entertainment | SCOONDOG156</title>
   <style>
     body {
       margin: 0;
       background: black;
-      overflow: hidden;
-      font-family: 'UnifrakturCook', cursive;
-      color: red;
+      font-family: sans-serif;
+      color: white;
     }
     #bg-canvas {
-      position: fixed; inset: 0;
-      width: 100%; height: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       z-index: 0;
     }
     #void-container {
       position: relative;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 8px;
+      padding: 10px;
       z-index: 1;
     }
     .window {
-      position: absolute;
-      border: 2px solid red;
-      box-shadow: 0 0 20px rgba(255,0,0,0.6);
+      position: relative;
+      border: 2px solid #d61a1a;
+      box-shadow: 0 0 15px rgba(214,26,26,0.6);
+      aspect-ratio: 16 / 9;
       overflow: hidden;
-      transform: rotate(var(--rot, 0deg));
-      background: black;
     }
     iframe, video {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       display: block;
     }
-    #controls {
+    #toggle {
       position: fixed;
-      top: 1rem; left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
+      top: 10px;
+      right: 10px;
       background: black;
-      border: 3px double red;
-      padding: 0.5rem 1rem;
-      box-shadow: 0 0 15px red;
+      border: 2px solid #d61a1a;
+      color: #d61a1a;
+      padding: 6px 12px;
       cursor: pointer;
-      user-select: none;
+      font-family: 'UnifrakturCook', cursive;
+      z-index: 10;
     }
-    #controls:hover { background: #111; }
   </style>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
-  <div id="controls">▶ ENTERTAINMENT: OFF</div>
+  <button id="toggle">Entertainment: OFF</button>
   <div id="void-container"></div>
 
+  <script src="sources.js"></script>
   <script>
-    // --- Starfield ---
-    const bg = document.getElementById("bg-canvas");
-    const ctx = bg.getContext("2d");
+    // starfield background
+    const bg=document.getElementById("bg-canvas"),ctx=bg.getContext("2d");
     function resize(){ bg.width=innerWidth; bg.height=innerHeight; }
-    window.addEventListener("resize", resize); resize();
-    const stars = Array.from({length:400},()=>({
-      x:Math.random()*bg.width, y:Math.random()*bg.height,
-      r:Math.random()*1.5+0.5, tw:Math.random()*1000
-    }));
+    window.addEventListener("resize",resize); resize();
+    const stars=Array.from({length:500},()=>({x:Math.random()*bg.width,y:Math.random()*bg.height,r:Math.random()*1.5+0.5,tw:Math.random()*1000}));
     function drawStars(t){
       ctx.fillStyle="black"; ctx.fillRect(0,0,bg.width,bg.height);
       for(const s of stars){
@@ -72,76 +73,36 @@
     }
     (function loop(t){ drawStars(t); requestAnimationFrame(loop); })(0);
 
-    // --- Video Sources ---
-    const sources = [
-      // YouTube chaos
-      "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1",
-      "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1", // lo-fi
-      "https://www.youtube.com/embed/8ZcmTl_1ER8?autoplay=1&mute=1", // war footage
-      "https://www.youtube.com/embed/tgbNymZ7vqY?autoplay=1&mute=1", // silly demo
-      "https://www.youtube.com/embed/L_jWHffIx5E?autoplay=1&mute=1", // Smash Mouth
-      "https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1", // BBC News live
-      "https://www.youtube.com/embed/HgzGwKwLmgM?autoplay=1&mute=1", // Queen
-      "https://www.youtube.com/embed/Ke90Tje7VS0?autoplay=1&mute=1", // tech talk
-      "https://www.youtube.com/embed/IUN664s7N-c?autoplay=1&mute=1", // Spongebob clip
-      // Twitch
-      "https://player.twitch.tv/?channel=xqc&parent=localhost",
-      "https://player.twitch.tv/?channel=asmr_sounds&parent=localhost",
-      // Local dummy mp4s (replace with real ones)
-      "videos/mukbang.mp4",
-      "videos/war_archive.mp4",
-      "videos/gameplay.mp4",
-      "videos/hgtv_househunters.mp4",
-      "videos/vlog.mp4",
-      "videos/redditstory.mp4",
-      "videos/pornclip.mp4",   // optional
-      "videos/cctv.mp4"
-    ];
+    // entertainment windows
+    const container=document.getElementById("void-container");
+    let active=false;
 
-    const container = document.getElementById("void-container");
-    let intervalId = null;
-
-    // Spawn a video window
-    function spawnWindow(){
-      const win=document.createElement("div");
-      win.className="window";
-      win.style.width=(200+Math.random()*300)+"px";
-      win.style.height=(150+Math.random()*250)+"px";
-      win.style.left=(Math.random()*(window.innerWidth-200))+"px";
-      win.style.top=(Math.random()*(window.innerHeight-150))+"px";
-      win.style.setProperty("--rot",(Math.random()*20-10)+"deg");
-
-      const src = sources[Math.floor(Math.random()*sources.length)];
-      if(src.endsWith(".mp4")){
-        const vid=document.createElement("video");
-        vid.src=src; vid.autoplay=true; vid.loop=true; vid.muted=true;
-        win.appendChild(vid);
-      } else {
-        const iframe=document.createElement("iframe");
-        iframe.src=src; 
-        iframe.allow="autoplay; encrypted-media";
-        iframe.frameBorder="0";
-        win.appendChild(iframe);
-      }
-      container.appendChild(win);
-      setTimeout(()=>win.remove(),30000); // cleanup after 30s
+    function spawnAll(){
+      container.innerHTML="";
+      SOURCES.forEach(src=>{
+        const win=document.createElement("div");
+        win.className="window";
+        if(src.endsWith(".mp4")){
+          const vid=document.createElement("video");
+          vid.src=src; vid.autoplay=true; vid.loop=true; vid.muted=true;
+          win.appendChild(vid);
+        } else {
+          const iframe=document.createElement("iframe");
+          iframe.src=src; iframe.allow="autoplay; encrypted-media";
+          win.appendChild(iframe);
+        }
+        container.appendChild(win);
+      });
     }
 
-    // Toggle ON/OFF
-    const btn = document.getElementById("controls");
-    let entertainmentOn = false;
-    btn.addEventListener("click", () => {
-      entertainmentOn = !entertainmentOn;
-      btn.textContent = entertainmentOn ? "⏸ ENTERTAINMENT: ON" : "▶ ENTERTAINMENT: OFF";
-
-      if(entertainmentOn){
-        // preload chaos
-        for(let i=0;i<20;i++) spawnWindow();
-        intervalId = setInterval(spawnWindow, 2000);
-      } else {
-        clearInterval(intervalId);
-        intervalId = null;
-        container.innerHTML = "";
+    document.getElementById("toggle").addEventListener("click",()=>{
+      active=!active;
+      if(active){
+        spawnAll();
+        toggle.textContent="Entertainment: ON";
+      }else{
+        container.innerHTML="";
+        toggle.textContent="Entertainment: OFF";
       }
     });
   </script>

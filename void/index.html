@@ -13,22 +13,16 @@
       font-family: 'UnifrakturCook', cursive;
       overflow: hidden;
     }
-
     header {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 50px;
       background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 1rem;
       z-index: 1000;
       border-bottom: 2px solid #d61a1a;
     }
-
     header a {
       color: #d61a1a;
       text-decoration: none;
@@ -37,27 +31,17 @@
       background: black;
       box-shadow: 0 0 8px rgba(214,26,26,.6);
     }
-
-    h1 {
-      margin: 0;
-      font-size: 1.2rem;
-    }
-
+    h1 { margin: 0; font-size: 1.2rem; }
     main {
       position: absolute;
-      top: 50px; /* leave space for header */
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 50px; bottom: 0; left: 0; right: 0;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      grid-auto-rows: 1fr;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(2, 1fr);
       gap: 2px;
     }
-
     video {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
       background: black;
     }
@@ -72,39 +56,53 @@
   <main id="video-grid"></main>
 
   <script>
-    // List of your uploaded videos
-    const VIDEOS = [
-      "videos/clip1.mp4",
-      "videos/clip2.mp4",
-      "videos/clip3.mp4",
-      "videos/clip4.mp4",
-      "videos/clip5.mp4"
-      // add more mp4s here
+    // List all clips in entertainment/videos/
+    const ALL_VIDEOS = [
+      "videos/clip1_000.mp4",
+      "videos/clip1_001.mp4",
+      "videos/clip2_000.mp4",
+      "videos/clip2_001.mp4"
+      // keep adding until you include them all
     ];
 
-    const NUM_VIDEOS = 12; // how many cells fill the screen
-
-    function randomVideo() {
-      return VIDEOS[Math.floor(Math.random() * VIDEOS.length)];
+    // Shuffle helper
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
     }
+
+    // Cycle through without repeats
+    let pool = shuffle([...ALL_VIDEOS]);
+    function nextClip() {
+      if (pool.length === 0) pool = shuffle([...ALL_VIDEOS]);
+      return pool.pop();
+    }
+
+    const grid = document.getElementById("video-grid");
+    const NUM_WINDOWS = 10;
 
     function createVideo() {
       const video = document.createElement("video");
-      video.src = randomVideo();
+      video.src = nextClip();
       video.autoplay = true;
       video.muted = true;
       video.playsInline = true;
       video.onended = () => {
-        video.src = randomVideo();
+        video.src = nextClip();
         video.play();
       };
       return video;
     }
 
-    const grid = document.getElementById("video-grid");
-    for (let i = 0; i < NUM_VIDEOS; i++) {
+    for (let i = 0; i < NUM_WINDOWS; i++) {
       grid.appendChild(createVideo());
     }
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>

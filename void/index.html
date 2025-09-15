@@ -11,10 +11,9 @@
       background: black;
       color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
       height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto; /* header | grid | controls */
     }
     header {
       text-align: center;
@@ -32,12 +31,11 @@
       font-size: 1rem;
     }
     #grid {
-      flex: 1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
       gap: 4px;
-      height: 100%;
+      height: 100%; /* ensures it fills row */
     }
     video {
       width: 100%;
@@ -88,7 +86,7 @@
     }
 
     async function loadVideos() {
-      const res = await fetch("videos.json"); // same folder as index.html
+      const res = await fetch("videos.json");
       const files = await res.json();
 
       const grid = document.getElementById("grid");

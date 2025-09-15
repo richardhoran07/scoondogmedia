@@ -20,7 +20,7 @@
     body {
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* 🚫 disables scroll */
+      overflow: hidden; /* 🚫 no scrolling */
     }
 
     header, #audio-controls, footer {
@@ -135,23 +135,48 @@
       const files = await res.json();
 
       const grid = document.getElementById("grid");
-      const pool = [...files];
+
+      // --- Tracking pools and usage ---
+      let unseenPool = [...files];   // clips not yet shown this cycle
+      let usageCounts = Object.fromEntries(files.map(f => [f, 0])); // overall usage
+      let recentGroups = []; // recently used source groups
+
+      function pickClip(excludeGroup) {
+        // Reset unseen pool when empty
+        if (unseenPool.length === 0) unseenPool = [...files];
+
+        // Sort unseen pool by usage (lowest first)
+        const sorted = [...unseenPool].sort((a, b) => usageCounts[a] - usageCounts[b]);
+
+        // Try to pick something not from excluded or recent groups
+        let candidate = sorted.find(f => {
+          const g = getGroupName(f);
+          return g !== excludeGroup && !recentGroups.includes(g);
+        });
+
+        if (!candidate) candidate = sorted[0];
+
+        // Remove from unseen pool
+        unseenPool = unseenPool.filter(f => f !== candidate);
+
+        // Update usage count
+        usageCounts[candidate]++;
+
+        // Track group recency
+        const group = getGroupName(candidate);
+        recentGroups.unshift(group);
+        if (recentGroups.length > 10) recentGroups.pop();
+
+        return candidate;
+      }
 
       function nextClip(cell) {
-        if (pool.length === 0) pool.push(...files);
-
         const vids = cell.querySelectorAll("video");
         const active = cell.querySelector("video.active");
         const hidden = Array.from(vids).find(v => v !== active);
 
-        let idx, file, group;
-        do {
-          idx = Math.floor(Math.random() * pool.length);
-          file = pool[idx];
-          group = getGroupName(file);
-        } while (pool.length > 1 && getGroupName(active.src.split("/").pop() || "") === group);
-
-        pool.splice(idx, 1);
+        const excludeGroup = active.src ? getGroupName(active.src.split("/").pop()) : null;
+        const file = pickClip(excludeGroup);
 
         hidden.src = "videos/" + file;
         hidden.currentTime = 0;
@@ -160,7 +185,7 @@
         active.classList.remove("active");
         hidden.classList.add("active");
 
-        // cut slightly before black frame
+        // Cut slightly before black frame
         hidden.ontimeupdate = () => {
           if (hidden.duration && hidden.currentTime >= hidden.duration - 0.25) {
             hidden.ontimeupdate = null;
@@ -170,7 +195,7 @@
         hidden.onerror = () => nextClip(cell);
       }
 
-      const cells = 9; // always 9 slots, grid CSS determines layout
+      const cells = 9; // always 9, grid CSS adapts to screen
       for (let i = 0; i < cells; i++) {
         const cell = document.createElement("div");
         cell.className = "cell";

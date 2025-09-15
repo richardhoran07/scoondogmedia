@@ -2,37 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Variety Show | SCOONDOG156</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
-
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #000;
+      background: black;
       color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
-    }
-
-    body {
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* 🚫 no scrolling */
+      height: 100vh;
     }
 
-    header, #audio-controls, footer {
-      flex: 0 0 auto;
-      background: rgba(0,0,0,.7);
+    header {
       text-align: center;
+      padding: .5rem;
+      background: rgba(0,0,0,.7);
+      z-index: 2;
     }
-
-    header { padding: .5rem 0 .25rem; }
-    header h1 { margin: 0 0 .25rem; line-height: 1.1; }
     a.back-btn {
       display: inline-block;
+      margin-top: .25rem;
       padding: .3rem .6rem;
       border: 2px double #d61a1a;
       text-decoration: none;
@@ -41,54 +34,30 @@
     }
 
     #grid {
-      flex: 1 1 auto;
+      flex: 1;
       display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
       gap: 4px;
-      background: #000;
     }
 
-    /* Desktop: 3x3 */
-    @media (min-width: 1001px) {
-      #grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* default on desktop = fill */
+      background: black;
     }
-    /* Tablet: 2x2 */
-    @media (min-width: 701px) and (max-width: 1000px) {
-      #grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
-    }
-    /* Mobile: 1 video framed */
+
+    /* Mobile rule: show entire video with black bars */
     @media (max-width: 700px) {
-      #grid { grid-template-columns: 1fr; grid-template-rows: 1fr; }
-      .cell {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #000;
+      #grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
       }
-      .cell video {
-        width: 100%;
-        height: auto;
-        max-height: 60vh; /* framed, not fullscreen */
-        object-fit: contain; /* no cropping */
+      video {
+        object-fit: contain; /* full frame visible */
       }
     }
-
-    .cell {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-    }
-    .cell video {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0;
-      background: #000;
-    }
-    .cell video.active { opacity: 1; }
 
     #audio-controls {
       display: flex;
@@ -96,18 +65,16 @@
       align-items: center;
       gap: .5rem;
       padding: .5rem;
-      flex-wrap: wrap;
+      background: rgba(0,0,0,.7);
     }
     #audio-controls select, #audio-controls button {
-      background: #000;
+      background: black;
       color: #d61a1a;
       border: 2px solid #d61a1a;
       padding: .2rem .4rem;
       font-family: inherit;
       cursor: pointer;
     }
-
-    footer { padding: .5rem; font-size: .9rem; }
   </style>
 </head>
 <body>
@@ -127,108 +94,60 @@
     <button id="play-btn">▶ Play</button>
   </div>
 
-  <footer>© <span id="year"></span> SCOONDOG156</footer>
-
   <audio id="bg-audio" loop></audio>
 
   <script>
-    function getGroupName(file) {
-      return file.split('-part')[0];
-    }
-
     async function loadVideos() {
-      const res = await fetch("./videos.json");
+      const res = await fetch("../videos.json");
       const files = await res.json();
 
       const grid = document.getElementById("grid");
+      const pool = [...files];
+      const seenSources = new Set();
 
-      let unseenPool = [...files];
-      let usageCounts = Object.fromEntries(files.map(f => [f, 0]));
-      let recentGroups = [];
-
-      function pickClip(excludeGroup) {
-        if (unseenPool.length === 0) unseenPool = [...files];
-        const sorted = [...unseenPool].sort((a, b) => {
-          const diff = usageCounts[a] - usageCounts[b];
-          return diff !== 0 ? diff : (Math.random() - 0.5);
-        });
-        let candidate = sorted.find(f => {
-          const g = getGroupName(f);
-          return g !== excludeGroup && !recentGroups.includes(g);
-        });
-        if (!candidate) candidate = sorted[0];
-        unseenPool = unseenPool.filter(f => f !== candidate);
-        usageCounts[candidate]++;
-        const group = getGroupName(candidate);
-        recentGroups.unshift(group);
-        if (recentGroups.length > 10) recentGroups.pop();
-        return candidate;
+      function pickClip() {
+        if (pool.length === 0) {
+          pool.push(...files);
+          seenSources.clear();
+        }
+        let tries = 0;
+        let file, srcKey;
+        do {
+          const idx = Math.floor(Math.random() * pool.length);
+          file = pool.splice(idx, 1)[0];
+          srcKey = file.split("-")[0];
+          tries++;
+        } while (seenSources.has(srcKey) && tries < 10);
+        seenSources.add(srcKey);
+        return file;
       }
 
-      function nextClip(cell) {
-        const vids = cell.querySelectorAll("video");
-        const active = cell.querySelector("video.active");
-        const hidden = Array.from(vids).find(v => v !== active);
-
-        const excludeGroup = active.src ? getGroupName(active.src.split("/").pop()) : null;
-        const file = pickClip(excludeGroup);
-
-        hidden.preload = "auto";
-        hidden.src = "videos/" + file;
-        hidden.load();
-
-        let swapped = false;
-        const doSwap = () => {
-          if (swapped) return;
-          swapped = true;
-          active.classList.remove("active");
-          hidden.classList.add("active");
-          hidden.ontimeupdate = () => {
-            if (hidden.duration && hidden.currentTime >= hidden.duration - 0.25) {
-              hidden.ontimeupdate = null;
-              nextClip(cell);
-            }
-          };
+      function nextClip(video) {
+        const file = pickClip();
+        const newVid = document.createElement("video");
+        newVid.src = "../videos/" + file;
+        newVid.autoplay = true;
+        newVid.muted = true;
+        newVid.playsInline = true;
+        newVid.onended = () => nextClip(newVid);
+        newVid.onloadeddata = () => {
+          grid.replaceChild(newVid, video);
         };
-
-        hidden.oncanplaythrough = () => {
-          hidden.muted = true;
-          hidden.play().catch(()=>{});
-          doSwap();
-        };
-
-        setTimeout(() => { if (!swapped) doSwap(); }, 3000);
-
-        hidden.onerror = () => nextClip(cell);
-        hidden.onstalled = () => nextClip(cell);
       }
 
-      const cells = 9;
-      for (let i = 0; i < cells; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-
-        const vid1 = document.createElement("video");
-        const vid2 = document.createElement("video");
-
-        [vid1, vid2].forEach(v => {
-          v.autoplay = true;
-          v.muted = true;
-          v.playsInline = true;
-          v.preload = "auto";
-          cell.appendChild(v);
-        });
-
-        vid1.classList.add("active");
-        grid.appendChild(cell);
-
-        nextClip(cell);
+      for (let i = 0; i < 9; i++) {
+        const vid = document.createElement("video");
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.onended = () => nextClip(vid);
+        const file = pickClip();
+        vid.src = "../videos/" + file;
+        grid.appendChild(vid);
       }
     }
-
     loadVideos();
 
-    // --- Audio controls ---
     const audio = document.getElementById("bg-audio");
     const playBtn = document.getElementById("play-btn");
     const trackSelect = document.getElementById("track-select");
@@ -239,16 +158,13 @@
       if (audio.paused) {
         audio.play().then(() => playBtn.textContent = "⏸ Pause");
       } else {
-        audio.pause();
-        playBtn.textContent = "▶ Play";
+        audio.pause(); playBtn.textContent = "▶ Play";
       }
     });
     trackSelect.addEventListener("change", () => {
       audio.src = trackSelect.value;
       audio.play().then(() => playBtn.textContent = "⏸ Pause");
     });
-
-    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

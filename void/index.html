@@ -1,89 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Entertainment | SCOONDOG156</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
-      margin: 0;
-      background: black;
-      color: #d61a1a;
-      font-family: 'Inter', sans-serif;
-      overflow: hidden;
+      margin: 0; background: black; color: #d61a1a;
+      font-family: 'UnifrakturCook', cursive; overflow: hidden;
+      display: flex; flex-direction: column; height: 100vh;
     }
-
     header {
-      text-align: center;
-      padding: 0.5rem;
-      font-family: 'UnifrakturCook', cursive;
-      font-size: 2rem;
-      color: #d61a1a;
-      text-shadow: 0 0 8px rgba(214,26,26,0.6);
-      z-index: 2;
-      position: relative;
+      text-align: center; padding: .5rem;
+      background: rgba(0,0,0,.7); z-index: 2;
     }
-
-    .back-btn {
-      display: inline-block;
-      margin: 0.5rem;
-      padding: 0.4rem 0.8rem;
-      border: 2px double #d61a1a;
-      color: #d61a1a;
-      background: black;
-      text-decoration: none;
-      font-family: 'UnifrakturCook', cursive;
-      box-shadow: 0 0 10px rgba(214,26,26,0.6);
+    a.back-btn {
+      display: inline-block; margin-top: .25rem; padding: .3rem .6rem;
+      border: 2px double #d61a1a; text-decoration: none;
+      color: #d61a1a; font-size: 1rem;
     }
-    .back-btn:hover { background:#111; }
-
-    #audio-controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      font-family: 'UnifrakturCook', cursive;
-      color: #d61a1a;
-      z-index: 2;
-      position: relative;
-    }
-    #audio-controls select, #audio-controls button {
-      background: black;
-      color: #d61a1a;
-      border: 2px solid #d61a1a;
-      padding: 0.2rem 0.4rem;
-      font-family: inherit;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .grid {
+    #grid {
+      flex: 1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      width: 100vw;
-      height: 100vh;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
+      gap: 4px;
     }
-
     video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      background: black;
+      width: 100%; height: 100%;
+      object-fit: cover; background: black;
+    }
+    #audio-controls {
+      display: flex; justify-content: center; align-items: center;
+      gap: .5rem; padding: .5rem;
+      background: rgba(0,0,0,.7);
+    }
+    #audio-controls select, #audio-controls button {
+      background: black; color: #d61a1a;
+      border: 2px solid #d61a1a;
+      padding: .2rem .4rem; font-family: inherit; cursor: pointer;
     }
   </style>
 </head>
 <body>
   <header>
+    <h1>ENTERTAINMENT</h1>
     <a href="../" class="back-btn">⬅ Back</a>
-    ENTERTAINMENT
   </header>
+
+  <div id="grid"></div>
 
   <div id="audio-controls">
     <select id="track-select">
@@ -94,72 +60,53 @@
     <button id="play-btn">▶ Play</button>
   </div>
 
-  <div class="grid" id="video-grid"></div>
-
   <audio id="bg-audio" loop></audio>
 
   <script>
-    async function loadClips() {
-      const res = await fetch("videos.json");
-      if (!res.ok) {
-        console.error("Failed to load videos.json");
-        return [];
-      }
-      return res.json();
-    }
+    async function loadVideos() {
+      const res = await fetch("../videos.json");
+      const files = await res.json();
 
-    function makeVideoCell(CLIPS) {
-      const vid = document.createElement("video");
-      vid.autoplay = true;
-      vid.muted = true;
-      vid.playsInline = true;
-      vid.loop = false;
+      const grid = document.getElementById("grid");
+      const pool = [...files]; // copy for shuffling
 
-      let used = [];
-      function pickRandomClip() {
-        let choices = CLIPS.filter(c => !used.includes(c));
-        if (choices.length === 0) { used.length = 0; choices = CLIPS.slice(); }
-        return choices[Math.floor(Math.random() * choices.length)];
-      }
-      function playNext() {
-        const file = pickRandomClip();
-        used.push(file);
-        vid.src = "../videos/" + file;
-        vid.play().catch(err => console.log("Play error:", err));
+      function nextClip(video) {
+        if (pool.length === 0) pool.push(...files); // refill
+        const idx = Math.floor(Math.random() * pool.length);
+        const file = pool.splice(idx, 1)[0];
+        video.src = "../videos/" + file;
+        video.play().catch(() => {});
       }
 
-      vid.addEventListener("ended", playNext);
-      playNext();
-      return vid;
-    }
-
-    loadClips().then(CLIPS => {
-      const grid = document.getElementById("video-grid");
       for (let i = 0; i < 9; i++) {
-        grid.appendChild(makeVideoCell(CLIPS));
+        const vid = document.createElement("video");
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.onended = () => nextClip(vid);
+        nextClip(vid);
+        grid.appendChild(vid);
       }
-    });
+    }
+    loadVideos();
 
-    // --- AUDIO PLAYER ---
+    // --- Audio controls ---
     const audio = document.getElementById("bg-audio");
     const playBtn = document.getElementById("play-btn");
     const trackSelect = document.getElementById("track-select");
-
     audio.volume = 0.7;
     audio.src = trackSelect.value;
 
     playBtn.addEventListener("click", () => {
       if (audio.paused) {
-        audio.play().then(() => { playBtn.textContent = "⏸ Pause"; })
-        .catch(err => console.log("Audio error:", err));
+        audio.play().then(() => playBtn.textContent = "⏸ Pause");
       } else {
         audio.pause(); playBtn.textContent = "▶ Play";
       }
     });
     trackSelect.addEventListener("change", () => {
       audio.src = trackSelect.value;
-      audio.play().then(() => { playBtn.textContent = "⏸ Pause"; })
-      .catch(err => console.log("Audio error:", err));
+      audio.play().then(() => playBtn.textContent = "⏸ Pause");
     });
   </script>
 </body>

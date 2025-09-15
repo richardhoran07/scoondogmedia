@@ -7,18 +7,83 @@
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     :root { --ink: #d61a1a; }
-    body { margin:0; height:100%; background:black; color:#ffd7d7; font-family:'Inter',sans-serif; overflow:hidden; }
+
+    body {
+      margin:0; background:black; color:#ffd7d7;
+      font-family:'Inter',sans-serif;
+      overflow-x:hidden;
+    }
+
     #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
-    #sphere-container { width:320px; height:320px; margin:1rem auto; z-index:2; position:relative; }
-    #audio-controls { display:flex; justify-content:center; align-items:center; gap:.5rem; margin-bottom:1rem; font-family:'UnifrakturCook',cursive; color:var(--ink); z-index:3; position:relative; }
-    #audio-controls select, #audio-controls button { background:black; color:var(--ink); border:2px solid var(--ink); padding:.2rem .4rem; font-family:inherit; font-size:.9rem; cursor:pointer; }
-    .wrap { max-width:1200px; margin:0 auto; padding:1rem 1rem 3rem; position:relative; z-index:2; }
-    .panels { display:grid; gap:1.5rem; grid-template-columns:repeat(3,1fr); margin:1rem auto 2rem; max-width:1000px; }
-    .panel { min-height:220px; background:rgba(10,10,15,0.8); display:grid; place-items:center; border:4px double var(--ink); box-shadow:0 0 20px rgba(214,26,26,.6); position:relative; }
-    .panel-label { font-family:'UnifrakturCook',cursive; font-size:2rem; color:var(--ink); text-shadow:0 0 8px rgba(214,26,26,.55); }
+
+    #sphere-container {
+      width:320px; height:320px;
+      margin:2rem auto 1.5rem;
+      z-index:2; position:relative;
+    }
+
+    #audio-controls {
+      display:flex; justify-content:center; align-items:center;
+      gap:.5rem; margin-bottom:2rem;
+      font-family:'UnifrakturCook',cursive; color:var(--ink);
+      z-index:3; position:relative; flex-wrap:wrap;
+    }
+    #audio-controls select, #audio-controls button {
+      background:black; color:var(--ink);
+      border:2px solid var(--ink);
+      padding:.3rem .6rem; font-family:inherit;
+      font-size:.9rem; cursor:pointer;
+      flex:1 1 auto; max-width:160px;
+    }
+
+    .wrap { max-width:1200px; margin:0 auto; padding:2rem 1rem 4rem; position:relative; z-index:2; }
+
+    .panels {
+      display:grid; gap:1.5rem;
+      grid-template-columns:repeat(3,1fr);
+      margin:0 auto 2rem; max-width:1000px;
+    }
+    .panel {
+      min-height:220px;
+      background:rgba(10,10,15,0.8);
+      display:grid; place-items:center;
+      border:4px double var(--ink);
+      box-shadow:0 0 20px rgba(214,26,26,.6);
+      position:relative;
+    }
+    .panel-label {
+      font-family:'UnifrakturCook',cursive;
+      font-size:2rem; color:var(--ink);
+      text-shadow:0 0 8px rgba(214,26,26,.55);
+    }
     .panel a { position:absolute; inset:0; }
-    .ticker-wrap { max-width:800px; margin:2rem auto 0; padding:.55rem 1rem; border:3px double var(--ink); background:rgba(15,15,20,0.9); color:var(--ink); text-align:center; font-family:'UnifrakturCook',cursive; }
-    footer { text-align:center; color:var(--ink); font-size:.85rem; margin-top:1rem; }
+
+    .ticker-wrap {
+      max-width:800px; margin:2rem auto 0; padding:.55rem 1rem;
+      border:3px double var(--ink); background:rgba(15,15,20,0.9);
+      color:var(--ink); text-align:center;
+      font-family:'UnifrakturCook',cursive;
+    }
+    footer { text-align:center; color:var(--ink); font-size:.85rem; margin-top:1.5rem; }
+
+    /* --- Mobile Fixes --- */
+    @media (max-width: 700px) {
+      #sphere-container { width:200px; height:200px; margin:1.5rem auto; }
+      #audio-controls { margin-bottom:1.5rem; }
+      #audio-controls select, #audio-controls button {
+        font-size:.8rem; max-width:120px;
+      }
+      .panels { grid-template-columns:1fr; max-width:90%; }
+      .panel { min-height:160px; }
+      .panel-label { font-size:1.5rem; }
+      .ticker-wrap { font-size:.9rem; padding:.4rem; margin-top:1.5rem; }
+      footer { font-size:.75rem; margin-top:1rem; }
+    }
+
+    /* --- Tablet layout --- */
+    @media (min-width:701px) and (max-width:1000px) {
+      .panels { grid-template-columns:repeat(2,1fr); }
+    }
   </style>
 </head>
 <body>
@@ -26,6 +91,7 @@
 
   <main class="wrap">
     <div id="sphere-container"></div>
+
     <div id="audio-controls">
       <select id="track-select">
         <option value="sounds/background.mp3">background.mp3</option>
@@ -34,13 +100,14 @@
       </select>
       <button id="play-btn">▶ Play</button>
     </div>
+
     <section class="panels">
       <div class="panel"><span class="panel-label">Words</span><a href="words/"></a></div>
       <div class="panel"><span class="panel-label">Images</span><a href="images/"></a></div>
       <div class="panel"><span class="panel-label">Sounds</span><a href="sounds/"></a></div>
-  <div class="panel"><span class="panel-label">Entertainment</span><a href="void/"></a></div>
-  </div>
+      <div class="panel"><span class="panel-label">Entertainment</span><a href="void/"></a></div>
     </section>
+
     <div class="ticker-wrap">Stop and smell the roses</div>
     <footer>© <span id="year"></span> SCOONDOG156</footer>
   </main>
@@ -63,7 +130,7 @@
   function drawStars(time){ctx.fillStyle="black";ctx.fillRect(0,0,bgCanvas.width,bgCanvas.height);for(const s of stars){const flick=0.5+0.5*Math.sin(time*0.002+s.tw);ctx.fillStyle=s.color;ctx.globalAlpha=flick;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;}
   (function loop(t){drawStars(t);requestAnimationFrame(loop);})(0);
 
-  // --- THREE ---
+  // --- THREE ORB ---
   const cont=document.getElementById("sphere-container");
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(45,1,0.1,1000);
@@ -72,7 +139,6 @@
   renderer.setSize(cont.clientWidth,cont.clientHeight);
   cont.appendChild(renderer.domElement);
 
-  // --- Shader Orb (Iridescent) ---
   const uniforms={ uTime:{value:0.0} };
   const mat=new THREE.ShaderMaterial({
     uniforms,
@@ -89,44 +155,33 @@
       varying vec3 vNormal;
       varying vec3 vPos;
       uniform float uTime;
-
       float hash(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
       float noise(vec3 p){
-        vec3 i=floor(p);
-        vec3 f=fract(p);
+        vec3 i=floor(p); vec3 f=fract(p);
         float n=dot(i,vec3(1.0,57.0,113.0));
         return mix(mix(mix(hash(i+vec3(0,0,0)), hash(i+vec3(1,0,0)),f.x),
                        mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)),f.x),f.y),
                    mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)),f.x),
                        mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)),f.x),f.y),f.z);
       }
-
       void main(){
         vec3 p = normalize(vNormal) * 2.0 + vec3(uTime*0.05, uTime*0.08, uTime*0.03);
         float n = noise(p*3.0 + uTime*0.05);
         float m = noise(p*6.0 + uTime*0.1);
         float val = mix(n,m,0.5);
-
-        // Iridescence (depends on view angle)
         float fresnel = pow(1.0 - max(dot(normalize(vNormal), normalize(-vPos)), 0.0), 2.0);
-
-        // Blend pearlescent hues
-        vec3 c1 = vec3(0.9,0.6,1.0); // violet
-        vec3 c2 = vec3(0.6,0.9,1.0); // cyan
-        vec3 c3 = vec3(1.0,0.8,0.6); // peach/gold
+        vec3 c1 = vec3(0.9,0.6,1.0);
+        vec3 c2 = vec3(0.6,0.9,1.0);
+        vec3 c3 = vec3(1.0,0.8,0.6);
         vec3 base = mix(c1,c2,val);
         base = mix(base,c3,fresnel);
-
-        // Lighting
         vec3 L = normalize(vec3(0.5,1.0,0.8));
         float diff = max(dot(vNormal,L),0.0);
         vec3 diffuse = base * diff;
-
         vec3 viewDir = normalize(-vPos);
         vec3 reflectDir = reflect(-L,vNormal);
         float spec = pow(max(dot(viewDir,reflectDir),0.0),32.0);
         vec3 specular = vec3(1.0)*spec*0.6;
-
         gl_FragColor = vec4(diffuse + specular,1.0);
       }
     `
@@ -134,7 +189,6 @@
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
   scene.add(sphere);
 
-  // Orbiting rainbow lights (visible glow)
   const lights=[
     new THREE.PointLight(0xff0000,1.5),
     new THREE.PointLight(0x00ffff,1.5),
@@ -150,15 +204,12 @@
     requestAnimationFrame(animate);
     const t=performance.now()*0.001;
     uniforms.uTime.value=t;
-
     sphere.rotation.y+=0.01;
     sphere.rotation.x+=0.003;
-
     lights.forEach((l,i)=>{
       const r=3+i*0.25,s=0.5+i*0.2;
       l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.5+i)*r);
     });
-
     renderer.render(scene,camera);
   } animate();
 
@@ -167,8 +218,17 @@
   const playBtn=document.getElementById("play-btn");
   const trackSelect=document.getElementById("track-select");
   audio.volume=0.7; audio.src=trackSelect.value;
-  playBtn.addEventListener("click",()=>{if(audio.paused){audio.play().then(()=>{playBtn.textContent="⏸ Pause";}).catch(e=>console.log(e));}else{audio.pause();playBtn.textContent="▶ Play";}});
-  trackSelect.addEventListener("change",()=>{audio.src=trackSelect.value;audio.play().catch(e=>console.log(e));});
+  playBtn.addEventListener("click",()=>{
+    if(audio.paused){
+      audio.play().then(()=>{playBtn.textContent="⏸ Pause";}).catch(e=>console.log(e));
+    } else {
+      audio.pause(); playBtn.textContent="▶ Play";
+    }
+  });
+  trackSelect.addEventListener("change",()=>{
+    audio.src=trackSelect.value; audio.play().catch(e=>console.log(e));
+  });
+
   document.getElementById("year").textContent=new Date().getFullYear();
   </script>
 </body>

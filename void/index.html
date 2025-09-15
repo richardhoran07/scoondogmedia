@@ -29,9 +29,7 @@
       text-align: center;
     }
 
-    header {
-      padding: .5rem 0 .25rem;
-    }
+    header { padding: .5rem 0 .25rem; }
     header h1 { margin: 0 0 .25rem; line-height: 1.1; }
     a.back-btn {
       display: inline-block;
@@ -98,10 +96,7 @@
       cursor: pointer;
     }
 
-    footer {
-      padding: .5rem;
-      font-size: .9rem;
-    }
+    footer { padding: .5rem; font-size: .9rem; }
   </style>
 </head>
 <body>
@@ -131,24 +126,25 @@
     }
 
     async function loadVideos() {
-      const res = await fetch("videos.json");
+      const res = await fetch("./videos.json");
       const files = await res.json();
 
       const grid = document.getElementById("grid");
 
-      // --- Tracking pools and usage ---
-      let unseenPool = [...files];   // clips not yet shown this cycle
-      let usageCounts = Object.fromEntries(files.map(f => [f, 0])); // overall usage
-      let recentGroups = []; // recently used source groups
+      // --- Tracking ---
+      let unseenPool = [...files];
+      let usageCounts = Object.fromEntries(files.map(f => [f, 0]));
+      let recentGroups = [];
 
       function pickClip(excludeGroup) {
-        // Reset unseen pool when empty
         if (unseenPool.length === 0) unseenPool = [...files];
 
-        // Sort unseen pool by usage (lowest first)
-        const sorted = [...unseenPool].sort((a, b) => usageCounts[a] - usageCounts[b]);
+        // Sort by usage, add a little randomness
+        const sorted = [...unseenPool].sort((a, b) => {
+          const diff = usageCounts[a] - usageCounts[b];
+          return diff !== 0 ? diff : (Math.random() - 0.5);
+        });
 
-        // Try to pick something not from excluded or recent groups
         let candidate = sorted.find(f => {
           const g = getGroupName(f);
           return g !== excludeGroup && !recentGroups.includes(g);
@@ -156,13 +152,9 @@
 
         if (!candidate) candidate = sorted[0];
 
-        // Remove from unseen pool
         unseenPool = unseenPool.filter(f => f !== candidate);
-
-        // Update usage count
         usageCounts[candidate]++;
 
-        // Track group recency
         const group = getGroupName(candidate);
         recentGroups.unshift(group);
         if (recentGroups.length > 10) recentGroups.pop();
@@ -178,24 +170,40 @@
         const excludeGroup = active.src ? getGroupName(active.src.split("/").pop()) : null;
         const file = pickClip(excludeGroup);
 
+        hidden.preload = "auto";
         hidden.src = "videos/" + file;
-        hidden.currentTime = 0;
-        hidden.play().catch(()=>{});
+        hidden.load();
 
-        active.classList.remove("active");
-        hidden.classList.add("active");
+        let swapDone = false;
 
-        // Cut slightly before black frame
-        hidden.ontimeupdate = () => {
-          if (hidden.duration && hidden.currentTime >= hidden.duration - 0.25) {
-            hidden.ontimeupdate = null;
-            nextClip(cell);
-          }
+        const doSwap = () => {
+          if (swapDone) return;
+          swapDone = true;
+          active.classList.remove("active");
+          hidden.classList.add("active");
+
+          // Cut slightly before black frame
+          hidden.ontimeupdate = () => {
+            if (hidden.duration && hidden.currentTime >= hidden.duration - 0.25) {
+              hidden.ontimeupdate = null;
+              nextClip(cell);
+            }
+          };
         };
+
+        // Swap as soon as it can play
+        hidden.oncanplay = () => {
+          hidden.play().then(doSwap).catch(doSwap);
+        };
+
+        // Fallback timeout if nothing happens
+        setTimeout(() => { if (!swapDone) doSwap(); }, 3000);
+
         hidden.onerror = () => nextClip(cell);
+        hidden.onstalled = () => nextClip(cell);
       }
 
-      const cells = 9; // always 9, grid CSS adapts to screen
+      const cells = 9;
       for (let i = 0; i < cells; i++) {
         const cell = document.createElement("div");
         cell.className = "cell";
@@ -207,6 +215,7 @@
           v.autoplay = true;
           v.muted = true;
           v.playsInline = true;
+          v.preload = "auto";
           cell.appendChild(v);
         });
 

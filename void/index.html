@@ -16,7 +16,7 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* no scrollbars */
+      overflow: hidden;
     }
 
     header {
@@ -41,10 +41,11 @@
     #grid {
       flex: 1 0 auto;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       background: #000;
-      height: 100%; /* JS will override with exact px */
+      height: 100%;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
     }
 
     video {
@@ -72,6 +73,14 @@
       font-family: inherit;
       cursor: pointer;
     }
+
+    /* --- Responsive: phones get 1x1 grid --- */
+    @media (max-width: 700px) {
+      #grid {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 1fr !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -94,7 +103,6 @@
   <audio id="bg-audio" loop></audio>
 
   <script>
-    // --- Size grid so 3 rows fit perfectly without scroll ---
     function sizeGrid() {
       const grid = document.getElementById('grid');
       const header = document.querySelector('header');
@@ -102,14 +110,17 @@
       const vh = window.innerHeight;
       const available = vh - header.offsetHeight - controls.offsetHeight;
 
-      const rowHeight = Math.floor(available / 3);
-      grid.style.height = (rowHeight * 3) + 'px';
-      grid.style.gridTemplateRows = `repeat(3, ${rowHeight}px)`;
+      // Detect if we’re in mobile mode (1x1)
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
+      const rows = isMobile ? 1 : 3;
+
+      const rowHeight = Math.floor(available / rows);
+      grid.style.height = (rowHeight * rows) + 'px';
+      grid.style.gridTemplateRows = `repeat(${rows}, ${rowHeight}px)`;
     }
     window.addEventListener('load', () => { sizeGrid(); setTimeout(sizeGrid, 50); });
     window.addEventListener('resize', sizeGrid);
 
-    // --- Group helper for neighbor shuffle ---
     function getGroupName(file) {
       return file.split('-part')[0];
     }

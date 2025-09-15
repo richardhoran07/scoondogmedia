@@ -12,14 +12,15 @@
       color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
       height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr auto; /* header | grid | controls */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     header {
       text-align: center;
       padding: .5rem;
       background: rgba(0,0,0,.7);
-      z-index: 2;
+      flex: 0 0 auto;
     }
     a.back-btn {
       display: inline-block;
@@ -31,11 +32,12 @@
       font-size: 1rem;
     }
     #grid {
+      flex: 1 1 auto;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
       gap: 4px;
-      height: 100%; /* ensures it fills row */
+      height: 100%; /* fills leftover space */
     }
     video {
       width: 100%;
@@ -50,6 +52,7 @@
       gap: .5rem;
       padding: .5rem;
       background: rgba(0,0,0,.7);
+      flex: 0 0 auto;
     }
     #audio-controls select, #audio-controls button {
       background: black;

@@ -7,21 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     :root { --ink: #d61a1a; }
-
     body {
       margin:0; background:black; color:#ffd7d7;
       font-family:'Inter',sans-serif;
       overflow-x:hidden;
     }
-
     #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
-
-    #sphere-container {
-      width:320px; height:320px;
-      margin:2rem auto 1.5rem;
-      z-index:2; position:relative;
-    }
-
+    #sphere-container { width:320px; height:320px; margin:2rem auto 1.5rem; z-index:2; position:relative; }
     #audio-controls {
       display:flex; justify-content:center; align-items:center;
       gap:.5rem; margin-bottom:2rem;
@@ -35,17 +27,10 @@
       font-size:.9rem; cursor:pointer;
       flex:1 1 auto; max-width:160px;
     }
-
     .wrap { max-width:1200px; margin:0 auto; padding:2rem 1rem 4rem; position:relative; z-index:2; }
-
-    .panels {
-      display:grid; gap:1.5rem;
-      grid-template-columns:repeat(3,1fr);
-      margin:0 auto 2rem; max-width:1000px;
-    }
+    .panels { display:grid; gap:1.5rem; grid-template-columns:repeat(3,1fr); margin:0 auto 2rem; max-width:1000px; }
     .panel {
-      min-height:220px;
-      background:rgba(10,10,15,0.8);
+      min-height:220px; background:rgba(10,10,15,0.8);
       display:grid; place-items:center;
       border:4px double var(--ink);
       box-shadow:0 0 20px rgba(214,26,26,.6);
@@ -57,7 +42,6 @@
       text-shadow:0 0 8px rgba(214,26,26,.55);
     }
     .panel a { position:absolute; inset:0; }
-
     .ticker-wrap {
       max-width:800px; margin:2rem auto 0; padding:.55rem 1rem;
       border:3px double var(--ink); background:rgba(15,15,20,0.9);
@@ -65,22 +49,16 @@
       font-family:'UnifrakturCook',cursive;
     }
     footer { text-align:center; color:var(--ink); font-size:.85rem; margin-top:1.5rem; }
-
-    /* --- Mobile Fixes --- */
     @media (max-width: 700px) {
       #sphere-container { width:200px; height:200px; margin:1.5rem auto; }
       #audio-controls { margin-bottom:1.5rem; }
-      #audio-controls select, #audio-controls button {
-        font-size:.8rem; max-width:120px;
-      }
+      #audio-controls select, #audio-controls button { font-size:.8rem; max-width:120px; }
       .panels { grid-template-columns:1fr; max-width:90%; }
       .panel { min-height:160px; }
       .panel-label { font-size:1.5rem; }
       .ticker-wrap { font-size:.9rem; padding:.4rem; margin-top:1.5rem; }
       footer { font-size:.75rem; margin-top:1rem; }
     }
-
-    /* --- Tablet layout --- */
     @media (min-width:701px) and (max-width:1000px) {
       .panels { grid-template-columns:repeat(2,1fr); }
     }
@@ -142,39 +120,26 @@
   const uniforms={ uTime:{value:0.0} };
   const mat=new THREE.ShaderMaterial({
     uniforms,
-    vertexShader:`
-      varying vec3 vNormal;
-      varying vec3 vPos;
-      void main(){
-        vNormal=normalize(normalMatrix*normal);
+    vertexShader:`varying vec3 vNormal; varying vec3 vPos;
+      void main(){ vNormal=normalize(normalMatrix*normal);
         vPos=(modelViewMatrix*vec4(position,1.0)).xyz;
-        gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
-      }
-    `,
-    fragmentShader:`
-      varying vec3 vNormal;
-      varying vec3 vPos;
-      uniform float uTime;
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader:`varying vec3 vNormal; varying vec3 vPos; uniform float uTime;
       float hash(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
-      float noise(vec3 p){
-        vec3 i=floor(p); vec3 f=fract(p);
+      float noise(vec3 p){ vec3 i=floor(p); vec3 f=fract(p);
         float n=dot(i,vec3(1.0,57.0,113.0));
         return mix(mix(mix(hash(i+vec3(0,0,0)), hash(i+vec3(1,0,0)),f.x),
                        mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)),f.x),f.y),
                    mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)),f.x),
-                       mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)),f.x),f.y),f.z);
-      }
+                       mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)),f.x),f.y),f.z); }
       void main(){
         vec3 p = normalize(vNormal) * 2.0 + vec3(uTime*0.05, uTime*0.08, uTime*0.03);
         float n = noise(p*3.0 + uTime*0.05);
         float m = noise(p*6.0 + uTime*0.1);
         float val = mix(n,m,0.5);
         float fresnel = pow(1.0 - max(dot(normalize(vNormal), normalize(-vPos)), 0.0), 2.0);
-        vec3 c1 = vec3(0.9,0.6,1.0);
-        vec3 c2 = vec3(0.6,0.9,1.0);
-        vec3 c3 = vec3(1.0,0.8,0.6);
-        vec3 base = mix(c1,c2,val);
-        base = mix(base,c3,fresnel);
+        vec3 c1 = vec3(0.9,0.6,1.0), c2 = vec3(0.6,0.9,1.0), c3 = vec3(1.0,0.8,0.6);
+        vec3 base = mix(c1,c2,val); base = mix(base,c3,fresnel);
         vec3 L = normalize(vec3(0.5,1.0,0.8));
         float diff = max(dot(vNormal,L),0.0);
         vec3 diffuse = base * diff;
@@ -183,12 +148,12 @@
         float spec = pow(max(dot(viewDir,reflectDir),0.0),32.0);
         vec3 specular = vec3(1.0)*spec*0.6;
         gl_FragColor = vec4(diffuse + specular,1.0);
-      }
-    `
+      }`
   });
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
   scene.add(sphere);
 
+  // lights + visible bulbs
   const lights=[
     new THREE.PointLight(0xff0000,1.5),
     new THREE.PointLight(0x00ffff,1.5),
@@ -198,7 +163,15 @@
     new THREE.PointLight(0xff8800,1.5),
     new THREE.PointLight(0x8888ff,1.5)
   ];
-  lights.forEach(l=>scene.add(l));
+  const bulbs=[];
+  const bulbGeo=new THREE.SphereGeometry(0.07,16,16);
+  lights.forEach(light=>{
+    scene.add(light);
+    const mat=new THREE.MeshBasicMaterial({color:light.color});
+    const bulb=new THREE.Mesh(bulbGeo,mat);
+    scene.add(bulb);
+    bulbs.push(bulb);
+  });
 
   function animate(){
     requestAnimationFrame(animate);
@@ -208,7 +181,11 @@
     sphere.rotation.x+=0.003;
     lights.forEach((l,i)=>{
       const r=3+i*0.25,s=0.5+i*0.2;
-      l.position.set(Math.cos(t*s+i)*r,Math.sin(t*s+i*0.7)*r,Math.sin(t*s*0.5+i)*r);
+      const x=Math.cos(t*s+i)*r;
+      const y=Math.sin(t*s+i*0.7)*r;
+      const z=Math.sin(t*s*0.5+i)*r;
+      l.position.set(x,y,z);
+      bulbs[i].position.set(x,y,z);
     });
     renderer.render(scene,camera);
   } animate();
@@ -218,17 +195,8 @@
   const playBtn=document.getElementById("play-btn");
   const trackSelect=document.getElementById("track-select");
   audio.volume=0.7; audio.src=trackSelect.value;
-  playBtn.addEventListener("click",()=>{
-    if(audio.paused){
-      audio.play().then(()=>{playBtn.textContent="⏸ Pause";}).catch(e=>console.log(e));
-    } else {
-      audio.pause(); playBtn.textContent="▶ Play";
-    }
-  });
-  trackSelect.addEventListener("change",()=>{
-    audio.src=trackSelect.value; audio.play().catch(e=>console.log(e));
-  });
-
+  playBtn.addEventListener("click",()=>{if(audio.paused){audio.play().then(()=>{playBtn.textContent="⏸ Pause";}).catch(e=>console.log(e));} else {audio.pause(); playBtn.textContent="▶ Play";}});
+  trackSelect.addEventListener("change",()=>{audio.src=trackSelect.value; audio.play().catch(e=>console.log(e));});
   document.getElementById("year").textContent=new Date().getFullYear();
   </script>
 </body>

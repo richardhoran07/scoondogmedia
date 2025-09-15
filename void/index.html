@@ -3,32 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VARIETY SHOW | SCOONDOG156</title>
+  <title>Variety Show | SCOONDOG156</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background: #000;
       color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
-      height: 100vh;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow: hidden; /* 🚫 disables scroll */
+    }
+
+    header, #audio-controls, footer {
+      flex: 0 0 auto;
+      background: rgba(0,0,0,.7);
+      text-align: center;
     }
 
     header {
-      text-align: center;
       padding: .5rem 0 .25rem;
-      background: rgba(0,0,0,.7);
-      flex: 0 0 auto;
     }
-    header h1 {
-      margin: 0 0 .25rem;
-      line-height: 1.1;
-    }
+    header h1 { margin: 0 0 .25rem; line-height: 1.1; }
     a.back-btn {
       display: inline-block;
       padding: .3rem .6rem;
@@ -39,12 +43,24 @@
     }
 
     #grid {
-      flex: 1 0 auto;
+      flex: 1 1 auto;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
       gap: 4px;
-      height: 100%;
+      background: #000;
+    }
+
+    /* Desktop: 3x3 */
+    @media (min-width: 1001px) {
+      #grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+    }
+    /* Tablet: 2x2 */
+    @media (min-width: 701px) and (max-width: 1000px) {
+      #grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+    }
+    /* Mobile: 1x1 */
+    @media (max-width: 700px) {
+      #grid { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+      .cell video { object-fit: contain; }
     }
 
     .cell {
@@ -71,8 +87,7 @@
       align-items: center;
       gap: .5rem;
       padding: .5rem;
-      background: rgba(0,0,0,.7);
-      flex: 0 0 auto;
+      flex-wrap: wrap;
     }
     #audio-controls select, #audio-controls button {
       background: #000;
@@ -81,6 +96,11 @@
       padding: .2rem .4rem;
       font-family: inherit;
       cursor: pointer;
+    }
+
+    footer {
+      padding: .5rem;
+      font-size: .9rem;
     }
   </style>
 </head>
@@ -100,6 +120,8 @@
     </select>
     <button id="play-btn">▶ Play</button>
   </div>
+
+  <footer>© <span id="year"></span> SCOONDOG156</footer>
 
   <audio id="bg-audio" loop></audio>
 
@@ -122,7 +144,6 @@
         const active = cell.querySelector("video.active");
         const hidden = Array.from(vids).find(v => v !== active);
 
-        // Pick random file
         let idx, file, group;
         do {
           idx = Math.floor(Math.random() * pool.length);
@@ -136,16 +157,21 @@
         hidden.currentTime = 0;
         hidden.play().catch(()=>{});
 
-        // Instant swap
         active.classList.remove("active");
         hidden.classList.add("active");
 
-        hidden.onended = () => nextClip(cell);
+        // cut slightly before black frame
+        hidden.ontimeupdate = () => {
+          if (hidden.duration && hidden.currentTime >= hidden.duration - 0.25) {
+            hidden.ontimeupdate = null;
+            nextClip(cell);
+          }
+        };
         hidden.onerror = () => nextClip(cell);
       }
 
-      // Build 9 grid cells with double videos
-      for (let i = 0; i < 9; i++) {
+      const cells = 9; // always 9 slots, grid CSS determines layout
+      for (let i = 0; i < cells; i++) {
         const cell = document.createElement("div");
         cell.className = "cell";
 
@@ -187,6 +213,8 @@
       audio.src = trackSelect.value;
       audio.play().then(() => playBtn.textContent = "⏸ Pause");
     });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

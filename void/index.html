@@ -1,94 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Entertainment | SCOONDOG156</title>
   <style>
     body {
-      margin: 0; background: black; color: #d61a1a;
-      font-family: 'UnifrakturCook', cursive;
-    }
-    #bg-canvas {
-      position: fixed; inset: 0; z-index: 0;
-      width: 100%; height: 100%;
-    }
-    main {
-      position: relative; z-index: 1;
-      padding: 1rem;
+      margin:0;
+      background:black;
+      color:#d61a1a;
+      font-family:'UnifrakturCook',cursive;
+      height:100vh;
+      display:flex;
+      flex-direction:column;
     }
     h1 {
-      text-align: center;
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    .back-btn {
-      display:inline-block; margin:1rem;
-      padding:.4rem .8rem;
-      border:2px double #d61a1a; color:#d61a1a;
-      background:black; text-decoration:none;
-      box-shadow:0 0 10px rgba(214,26,26,.6);
+      text-align:center;
+      margin:0.5rem 0;
+      flex:0 0 auto;
     }
     .grid {
-      display: grid;
+      flex:1 1 auto;
+      display:grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-gap: 0.5rem;
+      grid-template-rows: repeat(3, 1fr);
+      gap:2px;
     }
     video {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      border: 2px solid #d61a1a;
-      background: black;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      background:black;
     }
-    footer {
-      text-align:center; margin-top:1rem; color:#d61a1a;
+    .back-btn {
+      display:inline-block;
+      margin:0.5rem;
+      padding:.4rem .8rem;
+      border:2px double #d61a1a;
+      color:#d61a1a;
+      background:black;
+      text-decoration:none;
+      font-family:'UnifrakturCook',cursive;
+      box-shadow:0 0 10px rgba(214,26,26,.6);
+      flex:0 0 auto;
     }
+    .back-btn:hover { background:#111; }
   </style>
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
-  <main>
-    <a href="../" class="back-btn">⬅ Back</a>
-    <h1>ENTERTAINMENT</h1>
-    <div class="grid" id="video-grid"></div>
-    <footer>© <span id="year"></span> SCOONDOG156</footer>
-  </main>
+  <a href="../" class="back-btn">⬅ Back</a>
+  <h1>ENTERTAINMENT</h1>
+  <div class="grid" id="grid"></div>
 
   <script>
-  document.getElementById("year").textContent = new Date().getFullYear();
+    async function init() {
+      const res = await fetch("clips.json");
+      const FILES = await res.json();
 
-  async function loadVideos() {
-    try {
-      const res = await fetch("videos.json");
-      const files = await res.json();
-      const grid = document.getElementById("video-grid");
+      function shuffle(arr) {
+        return arr.sort(() => Math.random() - 0.5);
+      }
 
-      // Shuffle helper
-      function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+      let pool = shuffle([...FILES]);
 
-      // Fill 9 slots
-      const activeFiles = shuffle([...files]).slice(0, 9);
+      function getNextClip() {
+        if (pool.length === 0) pool = shuffle([...FILES]);
+        return pool.pop();
+      }
 
-      activeFiles.forEach((file, i) => {
+      const grid = document.getElementById("grid");
+      const NUM_VIDEOS = 9;
+
+      for (let i = 0; i < NUM_VIDEOS; i++) {
         const vid = document.createElement("video");
-        vid.src = "videos/" + file;
         vid.autoplay = true;
-        vid.loop = false;
         vid.muted = true;
+        vid.loop = false;
         vid.playsInline = true;
+        vid.src = "videos/" + getNextClip();
         vid.onended = () => {
-          // Pick next random
-          const next = shuffle([...files])[0];
-          vid.src = "videos/" + next;
+          vid.src = "videos/" + getNextClip();
           vid.play();
         };
         grid.appendChild(vid);
-      });
-    } catch (e) {
-      console.error("Error loading videos:", e);
+      }
     }
-  }
-  loadVideos();
+
+    init();
   </script>
 </body>
 </html>

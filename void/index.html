@@ -7,18 +7,29 @@
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
-      margin: 0; background: black; color: #d61a1a;
-      font-family: 'UnifrakturCook', cursive; overflow: hidden;
-      display: flex; flex-direction: column; height: 100vh;
+      margin: 0;
+      background: black;
+      color: #d61a1a;
+      font-family: 'UnifrakturCook', cursive;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
     header {
-      text-align: center; padding: .5rem;
-      background: rgba(0,0,0,.7); z-index: 2;
+      text-align: center;
+      padding: .5rem;
+      background: rgba(0,0,0,.7);
+      z-index: 2;
     }
     a.back-btn {
-      display: inline-block; margin-top: .25rem; padding: .3rem .6rem;
-      border: 2px double #d61a1a; text-decoration: none;
-      color: #d61a1a; font-size: 1rem;
+      display: inline-block;
+      margin-top: .25rem;
+      padding: .3rem .6rem;
+      border: 2px double #d61a1a;
+      text-decoration: none;
+      color: #d61a1a;
+      font-size: 1rem;
     }
     #grid {
       flex: 1;
@@ -26,20 +37,29 @@
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
       gap: 4px;
+      height: 100%;
     }
     video {
-      width: 100%; height: 100%;
-      object-fit: cover; background: black;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
     }
     #audio-controls {
-      display: flex; justify-content: center; align-items: center;
-      gap: .5rem; padding: .5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: .5rem;
+      padding: .5rem;
       background: rgba(0,0,0,.7);
     }
     #audio-controls select, #audio-controls button {
-      background: black; color: #d61a1a;
+      background: black;
+      color: #d61a1a;
       border: 2px solid #d61a1a;
-      padding: .2rem .4rem; font-family: inherit; cursor: pointer;
+      padding: .2rem .4rem;
+      font-family: inherit;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -63,31 +83,47 @@
   <audio id="bg-audio" loop></audio>
 
   <script>
+    function getGroupName(file) {
+      return file.split("-part")[0];
+    }
+
     async function loadVideos() {
-  const res = await fetch("videos.json");  // ✅ same folder as index.html
-  const files = await res.json();
+      const res = await fetch("videos.json"); // same folder as index.html
+      const files = await res.json();
 
-  const grid = document.getElementById("grid");
-  const pool = [...files];
+      const grid = document.getElementById("grid");
+      const pool = [...files];
 
-  function nextClip(video) {
-    if (pool.length === 0) pool.push(...files);
-    const idx = Math.floor(Math.random() * pool.length);
-    const file = pool.splice(idx, 1)[0];
-    video.src = "videos/" + file;  // ✅ points into /void/videos/
-    video.play().catch(() => {});
-  }
+      function nextClip(video) {
+        if (pool.length === 0) pool.push(...files);
 
-  for (let i = 0; i < 9; i++) {
-    const vid = document.createElement("video");
-    vid.autoplay = true;
-    vid.muted = true;
-    vid.playsInline = true;
-    vid.onended = () => nextClip(vid);
-    nextClip(vid);
-    grid.appendChild(vid);
-  }
-}
+        let idx, file, group;
+        const neighbors = Array.from(grid.querySelectorAll("video"))
+          .filter(v => v !== video)
+          .map(v => getGroupName(v.src.split("/").pop() || ""));
+
+        do {
+          idx = Math.floor(Math.random() * pool.length);
+          file = pool[idx];
+          group = getGroupName(file);
+        } while (neighbors.includes(group) && pool.length > 1);
+
+        pool.splice(idx, 1);
+        video.src = "videos/" + file;
+        video.play().catch(() => {});
+      }
+
+      for (let i = 0; i < 9; i++) {
+        const vid = document.createElement("video");
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.onended = () => nextClip(vid);
+        nextClip(vid);
+        grid.appendChild(vid);
+      }
+    }
+
     loadVideos();
 
     // --- Audio controls ---
@@ -101,7 +137,8 @@
       if (audio.paused) {
         audio.play().then(() => playBtn.textContent = "⏸ Pause");
       } else {
-        audio.pause(); playBtn.textContent = "▶ Play";
+        audio.pause();
+        playBtn.textContent = "▶ Play";
       }
     });
     trackSelect.addEventListener("change", () => {

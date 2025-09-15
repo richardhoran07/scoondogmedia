@@ -2,47 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Entertainment | SCOONDOG156</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; }
+    :root { --gap: 6px; }
+
     body {
       margin: 0;
-      background: black;
+      background: #000;
       color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
-      height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr auto; /* header | grid | controls */
+      min-height: 100dvh;            /* dynamic viewport, avoids OS UI weirdness */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;               /* no scroll when we size grid exactly */
     }
+
     header {
       text-align: center;
-      padding: .5rem;
+      padding: .5rem 0 .25rem;
       background: rgba(0,0,0,.7);
+      flex: 0 0 auto;
+    }
+    header h1 {                       /* kill default margins that were stealing height */
+      margin: 0 0 .25rem;
+      line-height: 1.1;
     }
     a.back-btn {
       display: inline-block;
-      margin-top: .25rem;
       padding: .3rem .6rem;
       border: 2px double #d61a1a;
       text-decoration: none;
       color: #d61a1a;
       font-size: 1rem;
     }
+
+    /* The video grid fills the leftover space EXACTLY; height is set by JS */
     #grid {
+      flex: 1 0 auto;
+      height: 100%;                   /* JS will overwrite with exact px */
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 4px;
-      height: 100%;
+      gap: var(--gap);
+      background: #000;
     }
-    #grid > video {
+
+    video {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      background: black;
-      aspect-ratio: 16 / 9; /* forces consistent size */
+      display: block;
+      object-fit: cover;              /* fill each cell, crop if needed */
+      background: #000;
     }
+
     #audio-controls {
       display: flex;
       justify-content: center;
@@ -50,9 +65,10 @@
       gap: .5rem;
       padding: .5rem;
       background: rgba(0,0,0,.7);
+      flex: 0 0 auto;
     }
     #audio-controls select, #audio-controls button {
-      background: black;
+      background: #000;
       color: #d61a1a;
       border: 2px solid #d61a1a;
       padding: .2rem .4rem;
@@ -81,42 +97,62 @@
   <audio id="bg-audio" loop></audio>
 
   <script>
+    // --- Exact grid height so 3x3 always fits without scrolling ---
+    function sizeGrid() {
+      const grid = document.getElementById('grid');
+      const header = document.querySelector('header');
+      const controls = document.getElementById('audio-controls');
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const h = vh - header.offsetHeight - controls.offsetHeight;
+      grid.style.height = Math.max(h, 0) + 'px';
+    }
+    window.addEventListener('load', () => { sizeGrid(); setTimeout(sizeGrid, 0); });
+    window.addEventListener('resize', sizeGrid);
+
+    // --- Group helper for neighbor-avoidance shuffle ---
     function getGroupName(file) {
-      return file.split("-part")[0];
+      return file.split('-part')[0]; // "clip001" from "clip001-part007.mp4"
     }
 
     async function loadVideos() {
-      const res = await fetch("videos.json");
+      const res = await fetch('videos.json');  // same folder as index.html
       const files = await res.json();
 
-      const grid = document.getElementById("grid");
-      const pool = [...files];
+      const grid = document.getElementById('grid');
+      const pool = [...files]; // global "deal every card once" bag
 
       function nextClip(video) {
         if (pool.length === 0) pool.push(...files);
 
         let idx, file, group;
-        const neighbors = Array.from(grid.querySelectorAll("video"))
-          .filter(v => v !== video)
-          .map(v => getGroupName(v.src.split("/").pop() || ""));
+        // Soft "neighbor" rule: don't pick same group as any currently visible cell
+        const neighborGroups = Array.from(grid.querySelectorAll('video'))
+          .filter(v => v !== video && v.currentSrc)
+          .map(v => getGroupName(v.currentSrc.split('/').pop() || ''));
 
+        let tries = 0;
         do {
           idx = Math.floor(Math.random() * pool.length);
           file = pool[idx];
           group = getGroupName(file);
-        } while (neighbors.includes(group) && pool.length > 1);
+          tries++;
+          // give up after some tries to avoid infinite loop when library is skewed
+        } while (neighborGroups.includes(group) && pool.length > 1 && tries < 20);
 
         pool.splice(idx, 1);
-        video.src = "videos/" + file;
+        video.src = 'videos/' + file;
         video.play().catch(() => {});
       }
 
+      // Build the 3x3 grid
       for (let i = 0; i < 9; i++) {
-        const vid = document.createElement("video");
+        const vid = document.createElement('video');
         vid.autoplay = true;
         vid.muted = true;
         vid.playsInline = true;
         vid.onended = () => nextClip(vid);
+        // If a src errors (404 etc.), advance to another clip
+        vid.onerror = () => nextClip(vid);
         nextClip(vid);
         grid.appendChild(vid);
       }
@@ -125,24 +161,25 @@
     loadVideos();
 
     // --- Audio controls ---
-    const audio = document.getElementById("bg-audio");
-    const playBtn = document.getElementById("play-btn");
-    const trackSelect = document.getElementById("track-select");
+    const audio = document.getElementById('bg-audio');
+    const playBtn = document.getElementById('play-btn');
+    const trackSelect = document.getElementById('track-select');
     audio.volume = 0.7;
     audio.src = trackSelect.value;
 
-    playBtn.addEventListener("click", () => {
+    playBtn.addEventListener('click', () => {
       if (audio.paused) {
-        audio.play().then(() => playBtn.textContent = "⏸ Pause");
+        audio.play().then(() => playBtn.textContent = '⏸ Pause');
       } else {
         audio.pause();
-        playBtn.textContent = "▶ Play";
+        playBtn.textContent = '▶ Play';
       }
     });
-    trackSelect.addEventListener("change", () => {
+    trackSelect.addEventListener('change', () => {
       audio.src = trackSelect.value;
-      audio.play().then(() => playBtn.textContent = "⏸ Pause");
+      audio.play().then(() => playBtn.textContent = '⏸ Pause');
     });
   </script>
 </body>
 </html>
+

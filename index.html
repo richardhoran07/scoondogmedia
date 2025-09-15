@@ -153,25 +153,45 @@
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);
   scene.add(sphere);
 
-  // lights + visible bulbs
-  const lights=[
-    new THREE.PointLight(0xff0000,1.5),
-    new THREE.PointLight(0x00ffff,1.5),
-    new THREE.PointLight(0xff00ff,1.5),
-    new THREE.PointLight(0xffff00,1.5),
-    new THREE.PointLight(0x00ff00,1.5),
-    new THREE.PointLight(0xff8800,1.5),
-    new THREE.PointLight(0x8888ff,1.5)
-  ];
-  const bulbs=[];
-  const bulbGeo=new THREE.SphereGeometry(0.07,16,16);
-  lights.forEach(light=>{
+  // --- Satellites with glow sprites ---
+  const colors=[0xff0000,0x00ffff,0xff00ff,0xffff00,0x00ff00,0xff8800,0x8888ff];
+  const satellites=[];
+  const orbitParams=[];
+
+  // make a radial gradient texture for glow
+  function makeGlowTexture(colorHex) {
+    const size = 128;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    const color = new THREE.Color(colorHex);
+    gradient.addColorStop(0, `rgba(${color.r*255},${color.g*255},${color.b*255},1)`);
+    gradient.addColorStop(1, `rgba(${color.r*255},${color.g*255},${color.b*255},0)`);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,size,size);
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+  }
+
+  for(let i=0;i<7;i++){
+    const color=colors[i];
+    const light=new THREE.PointLight(color,1.2,10);
     scene.add(light);
-    const mat=new THREE.MeshBasicMaterial({color:light.color});
-    const bulb=new THREE.Mesh(bulbGeo,mat);
-    scene.add(bulb);
-    bulbs.push(bulb);
-  });
+
+    const spriteMat=new THREE.SpriteMaterial({ map: makeGlowTexture(color), transparent:true });
+    const sprite=new THREE.Sprite(spriteMat);
+    sprite.scale.set(0.5,0.5,1); // size of glow
+    scene.add(sprite);
+
+    satellites.push({light, sprite});
+    orbitParams.push({
+      r:2.5+Math.random()*1.5,
+      speed:0.3+Math.random()*0.7,
+      inclination:Math.random()*Math.PI,
+      phase:Math.random()*Math.PI*2
+    });
+  }
 
   function animate(){
     requestAnimationFrame(animate);
@@ -179,14 +199,17 @@
     uniforms.uTime.value=t;
     sphere.rotation.y+=0.01;
     sphere.rotation.x+=0.003;
-    lights.forEach((l,i)=>{
-      const r=3+i*0.25,s=0.5+i*0.2;
-      const x=Math.cos(t*s+i)*r;
-      const y=Math.sin(t*s+i*0.7)*r;
-      const z=Math.sin(t*s*0.5+i)*r;
-      l.position.set(x,y,z);
-      bulbs[i].position.set(x,y,z);
+
+    satellites.forEach((sat,i)=>{
+      const p=orbitParams[i];
+      const angle=t*p.speed+p.phase;
+      const x=p.r*Math.cos(angle)*Math.sin(p.inclination);
+      const y=p.r*Math.sin(angle)*Math.sin(p.inclination);
+      const z=p.r*Math.cos(p.inclination);
+      sat.light.position.set(x,y,z);
+      sat.sprite.position.set(x,y,z);
     });
+
     renderer.render(scene,camera);
   } animate();
 
@@ -195,7 +218,7 @@
   const playBtn=document.getElementById("play-btn");
   const trackSelect=document.getElementById("track-select");
   audio.volume=0.7; audio.src=trackSelect.value;
-  playBtn.addEventListener("click",()=>{if(audio.paused){audio.play().then(()=>{playBtn.textContent="⏸ Pause";}).catch(e=>console.log(e));} else {audio.pause(); playBtn.textContent="▶ Play";}});
+  playBtn.addEventListener("click",()=>{if(audio.paused){audio.play().then(()=>{playBtn.textContent="⏸ Pause");}).catch(e=>console.log(e));} else {audio.pause(); playBtn.textContent="▶ Play";}});
   trackSelect.addEventListener("change",()=>{audio.src=trackSelect.value; audio.play().catch(e=>console.log(e));});
   document.getElementById("year").textContent=new Date().getFullYear();
   </script>

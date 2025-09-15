@@ -55,10 +55,21 @@
     @media (min-width: 701px) and (max-width: 1000px) {
       #grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
     }
-    /* Mobile: 1x1 */
+    /* Mobile: 1 video framed */
     @media (max-width: 700px) {
       #grid { grid-template-columns: 1fr; grid-template-rows: 1fr; }
-      .cell video { object-fit: contain; }
+      .cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #000;
+      }
+      .cell video {
+        width: 100%;
+        height: auto;
+        max-height: 60vh; /* framed, not fullscreen */
+        object-fit: contain; /* no cropping */
+      }
     }
 
     .cell {
@@ -131,34 +142,26 @@
 
       const grid = document.getElementById("grid");
 
-      // --- Tracking ---
       let unseenPool = [...files];
       let usageCounts = Object.fromEntries(files.map(f => [f, 0]));
       let recentGroups = [];
 
       function pickClip(excludeGroup) {
         if (unseenPool.length === 0) unseenPool = [...files];
-
-        // Sort by usage, add a little randomness
         const sorted = [...unseenPool].sort((a, b) => {
           const diff = usageCounts[a] - usageCounts[b];
           return diff !== 0 ? diff : (Math.random() - 0.5);
         });
-
         let candidate = sorted.find(f => {
           const g = getGroupName(f);
           return g !== excludeGroup && !recentGroups.includes(g);
         });
-
         if (!candidate) candidate = sorted[0];
-
         unseenPool = unseenPool.filter(f => f !== candidate);
         usageCounts[candidate]++;
-
         const group = getGroupName(candidate);
         recentGroups.unshift(group);
         if (recentGroups.length > 10) recentGroups.pop();
-
         return candidate;
       }
 
@@ -174,15 +177,12 @@
         hidden.src = "videos/" + file;
         hidden.load();
 
-        let swapDone = false;
-
+        let swapped = false;
         const doSwap = () => {
-          if (swapDone) return;
-          swapDone = true;
+          if (swapped) return;
+          swapped = true;
           active.classList.remove("active");
           hidden.classList.add("active");
-
-          // Cut slightly before black frame
           hidden.ontimeupdate = () => {
             if (hidden.duration && hidden.currentTime >= hidden.duration - 0.25) {
               hidden.ontimeupdate = null;
@@ -191,13 +191,13 @@
           };
         };
 
-        // Swap as soon as it can play
-        hidden.oncanplay = () => {
-          hidden.play().then(doSwap).catch(doSwap);
+        hidden.oncanplaythrough = () => {
+          hidden.muted = true;
+          hidden.play().catch(()=>{});
+          doSwap();
         };
 
-        // Fallback timeout if nothing happens
-        setTimeout(() => { if (!swapDone) doSwap(); }, 3000);
+        setTimeout(() => { if (!swapped) doSwap(); }, 3000);
 
         hidden.onerror = () => nextClip(cell);
         hidden.onstalled = () => nextClip(cell);

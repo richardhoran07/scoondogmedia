@@ -44,7 +44,7 @@
     .video-slot {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9; /* clean fixed aspect ratio */
+      aspect-ratio: 16 / 9;
       background: black;
       overflow: hidden;
     }
@@ -53,11 +53,10 @@
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain; /* show whole clip */
+      object-fit: contain;
       background: black;
     }
 
-    /* Mobile: 1 video fills viewport between header + footer */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
@@ -66,7 +65,7 @@
       }
       .video-slot {
         aspect-ratio: auto;
-        height: calc(100vh - 200px); /* leave space for header+controls+footer */
+        height: calc(100vh - 200px);
       }
       .video-slot video {
         object-fit: contain;
@@ -122,6 +121,7 @@
 
   <script>
     async function loadVideos() {
+      // fetch list of filenames
       const res = await fetch("./videos.json");
       const files = await res.json();
 
@@ -148,7 +148,9 @@
         return file;
       }
 
-      // --- Mobile: 1 video ---
+      // Base URL for CDN
+      const CDN_BASE = "https://533b6accec0d915d65aae6a2541747c9.r2.cloudflarestorage.com/clips/videos/";
+
       if (isMobile) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
@@ -161,16 +163,13 @@
         grid.appendChild(slot);
 
         function nextClip() {
-          vid.src = "./videos/" + pickClip();
+          vid.src = CDN_BASE + pickClip();
           vid.play().catch(()=>{});
         }
 
         vid.onended = nextClip;
         nextClip();
-      }
-
-      // --- Desktop: 6 slots ---
-      else {
+      } else {
         for (let i = 0; i < 6; i++) {
           const slot = document.createElement("div");
           slot.className = "video-slot";
@@ -181,7 +180,7 @@
           vid.preload = "auto";
 
           function nextClip() {
-            vid.src = "./videos/" + pickClip();
+            vid.src = CDN_BASE + pickClip();
             vid.play().catch(()=>{});
           }
 
@@ -216,4 +215,5 @@
   </script>
 </body>
 </html>
+
 

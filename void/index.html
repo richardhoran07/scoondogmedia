@@ -46,6 +46,7 @@
       width: 100%;
       aspect-ratio: 16 / 9;
       background: black;
+      overflow: hidden;
     }
     .video-slot video {
       position: absolute;
@@ -147,28 +148,46 @@
         return file;
       }
 
-      // --- Mobile: single looping video ---
+      // --- Mobile: double-buffer ---
       if (isMobile) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
         grid.appendChild(slot);
 
-        const vid = document.createElement("video");
-        vid.autoplay = true;
-        vid.muted = true;
-        vid.playsInline = true;
-        vid.preload = "auto";
-        slot.appendChild(vid);
+        const vid1 = document.createElement("video");
+        const vid2 = document.createElement("video");
+        [vid1, vid2].forEach(v => {
+          v.autoplay = true;
+          v.muted = true;
+          v.playsInline = true;
+          v.preload = "auto";
+          v.style.display = "none";
+          slot.appendChild(v);
+        });
+
+        let current = vid1;
+        let next = vid2;
+
+        function queueNext() {
+          next.src = "./videos/" + pickClip();
+          next.load();
+        }
 
         function playNext() {
-          vid.src = "./videos/" + pickClip();
-          vid.play().catch(() => {});
+          current.style.display = "none";
+          next.style.display = "block";
+          next.play().catch(()=>{});
+          [current, next] = [next, current]; // swap
+          queueNext();
         }
-        vid.onended = playNext;
-        playNext();
+
+        current.src = "./videos/" + pickClip();
+        current.style.display = "block";
+        current.onended = playNext;
+        queueNext();
       }
 
-      // --- Desktop: 6 slots in grid ---
+      // --- Desktop: 6 slots fixed ---
       else {
         function nextClip(video, slot) {
           const file = pickClip();

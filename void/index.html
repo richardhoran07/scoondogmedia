@@ -11,10 +11,10 @@
       background: black;
       color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
     header {
@@ -37,18 +37,19 @@
       flex: 1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
       gap: 4px;
+      min-height: 0;
     }
 
     video {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* crop on desktop */
+      object-fit: cover; /* default desktop look */
       background: black;
     }
 
-    /* Mobile: 1×1 grid and show full frame */
+    /* Mobile: 1×1 grid, full frame visible */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
@@ -75,6 +76,13 @@
       font-family: inherit;
       cursor: pointer;
     }
+
+    footer {
+      text-align: center;
+      color: #d61a1a;
+      font-size: .85rem;
+      margin: .5rem 0 1rem;
+    }
   </style>
 </head>
 <body>
@@ -94,11 +102,12 @@
     <button id="play-btn">▶ Play</button>
   </div>
 
+  <footer>© <span id="year"></span> SCOONDOG156</footer>
+
   <audio id="bg-audio" loop></audio>
 
   <script>
     async function loadVideos() {
-      // ✅ videos.json is in the same /void/ folder
       const res = await fetch("videos.json");
       const files = await res.json();
 
@@ -118,7 +127,7 @@
         do {
           const idx = Math.floor(Math.random() * pool.length);
           file = pool.splice(idx, 1)[0];
-          srcKey = file.split("-")[0]; // keep source variety
+          srcKey = file.split("-")[0];
           tries++;
         } while (seenSources.has(srcKey) && tries < 10);
         seenSources.add(srcKey);
@@ -128,7 +137,7 @@
       function nextClip(video) {
         const file = pickClip();
         const newVid = document.createElement("video");
-        newVid.src = "videos/" + file;   // ✅ use /void/videos/
+        newVid.src = "videos/" + file;
         newVid.autoplay = true;
         newVid.muted = true;
         newVid.playsInline = true;
@@ -139,7 +148,7 @@
       }
 
       if (isMobile) {
-        // Only 1 video on mobile
+        // Only 1 video element on mobile
         const vid = document.createElement("video");
         vid.autoplay = true;
         vid.muted = true;
@@ -148,8 +157,8 @@
         vid.src = "videos/" + pickClip();
         grid.appendChild(vid);
       } else {
-        // 9 videos on desktop
-        for (let i = 0; i < 9; i++) {
+        // 6 videos on desktop (2 rows × 3 cols)
+        for (let i = 0; i < 6; i++) {
           const vid = document.createElement("video");
           vid.autoplay = true;
           vid.muted = true;
@@ -162,7 +171,7 @@
     }
     loadVideos();
 
-    // --- AUDIO ---
+    // --- AUDIO CONTROLS ---
     const audio = document.getElementById("bg-audio");
     const playBtn = document.getElementById("play-btn");
     const trackSelect = document.getElementById("track-select");
@@ -173,14 +182,16 @@
       if (audio.paused) {
         audio.play().then(() => playBtn.textContent = "⏸ Pause");
       } else {
-        audio.pause();
-        playBtn.textContent = "▶ Play";
+        audio.pause(); playBtn.textContent = "▶ Play";
       }
     });
     trackSelect.addEventListener("change", () => {
       audio.src = trackSelect.value;
       audio.play().then(() => playBtn.textContent = "⏸ Pause");
     });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
+

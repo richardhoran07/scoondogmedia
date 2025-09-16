@@ -38,29 +38,38 @@
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(2, 1fr);
       gap: 4px;
+      padding: 4px;
     }
 
-    video {
+    /* Fixed aspect ratio (16:9) video slots */
+    .video-slot {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9; /* ensures all cells stay same shape */
+      background: black;
+    }
+    .video-slot video {
+      position: absolute;
+      top: 0; left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover; /* desktop default */
+      object-fit: contain; /* ✅ show full video */
       background: black;
     }
 
-    /* Mobile: 1×1 grid and fit full video */
+    /* Mobile: 1 full video filling space between header and footer */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
-        height: auto;
-        flex: 1;
+        padding: 0;
       }
-      video {
+      .video-slot {
+        aspect-ratio: auto;
+        height: calc(100vh - 200px); /* leave room for header+controls+footer */
+      }
+      .video-slot video {
         object-fit: contain;
-        height: calc(100vh - 160px); /* header+footer space */
-      }
-      body {
-        overflow-y: auto;
       }
     }
 
@@ -139,20 +148,19 @@
         return file;
       }
 
-      // --- Mobile double-buffering ---
+      // --- Mobile: single video with double-buffer ---
       if (isMobile) {
         function setupVideo(initial = false, currentVid = null) {
+          const slot = document.createElement("div");
+          slot.className = "video-slot";
+
           const vid = document.createElement("video");
           vid.autoplay = true;
           vid.muted = true;
           vid.playsInline = true;
           vid.preload = "auto";
-          vid.style.width = "100%";
-          vid.style.height = "100%";
-          vid.style.objectFit = "contain";
           vid.src = "./videos/" + pickClip();
 
-          // Preload next
           const nextVid = document.createElement("video");
           nextVid.muted = true;
           nextVid.playsInline = true;
@@ -160,39 +168,41 @@
           nextVid.src = "./videos/" + pickClip();
 
           vid.onended = () => {
-            grid.replaceChild(nextVid, vid);
+            slot.replaceChild(nextVid, vid);
             setupVideo(false, nextVid);
           };
 
-          if (initial) {
-            grid.appendChild(vid);
-          }
+          slot.appendChild(vid);
+          if (initial) grid.appendChild(slot);
         }
         setupVideo(true);
 
-      // --- Desktop normal rotation ---
+      // --- Desktop: 6 fixed slots ---
       } else {
-        function nextClip(video) {
+        function nextClip(video, slot) {
           const file = pickClip();
           const newVid = document.createElement("video");
           newVid.src = "./videos/" + file;
           newVid.autoplay = true;
           newVid.muted = true;
           newVid.playsInline = true;
-          newVid.onended = () => nextClip(newVid);
+          newVid.onended = () => nextClip(newVid, slot);
           newVid.onloadeddata = () => {
-            grid.replaceChild(newVid, video);
+            slot.replaceChild(newVid, video);
           };
         }
 
         for (let i = 0; i < 6; i++) {
+          const slot = document.createElement("div");
+          slot.className = "video-slot";
           const vid = document.createElement("video");
           vid.autoplay = true;
           vid.muted = true;
           vid.playsInline = true;
-          vid.onended = () => nextClip(vid);
+          vid.onended = () => nextClip(vid, slot);
           vid.src = "./videos/" + pickClip();
-          grid.appendChild(vid);
+          slot.appendChild(vid);
+          grid.appendChild(slot);
         }
       }
     }
@@ -219,4 +229,3 @@
   </script>
 </body>
 </html>
-

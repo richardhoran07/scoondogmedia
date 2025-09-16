@@ -4,169 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Variety Show | SCOONDOG156</title>
-  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      background: black;
-      color: #d61a1a;
-      font-family: 'UnifrakturCook', cursive;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    header {
-      text-align: center;
-      padding: .5rem;
-      background: rgba(0,0,0,.7);
-      z-index: 2;
-    }
-    a.back-btn {
-      display: inline-block;
-      margin-top: .25rem;
-      padding: .3rem .6rem;
-      border: 2px double #d61a1a;
-      text-decoration: none;
-      color: #d61a1a;
-      font-size: 1rem;
-    }
-    #grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      gap: 4px;
-      padding: 4px;
-    }
-    .video-slot {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: black;
-      overflow: hidden;
-    }
-    .video-slot video {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: black;
-      display: block;
-      visibility: hidden; /* force visibility toggle when ready */
-    }
-    @media (max-width: 700px) {
-      #grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr;
-        padding: 0;
-      }
-      .video-slot {
-        aspect-ratio: auto;
-        height: calc(100vh - 180px);
-      }
-    }
-    #audio-controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: .5rem;
-      padding: .5rem;
-      background: rgba(0,0,0,.7);
-    }
-    #audio-controls select, #audio-controls button {
-      background: black;
-      color: #d61a1a;
-      border: 2px solid #d61a1a;
-      padding: .2rem .4rem;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    footer {
-      text-align: center;
-      font-size: .9rem;
-      padding: .5rem;
-      color: #d61a1a;
-      background: rgba(0,0,0,.7);
-    }
+    body { margin:0; background:black; color:red; height:100vh; display:flex; flex-direction:column; }
+    #grid { flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:4px; }
+    .video-slot { background:black; overflow:hidden; }
+    .video-slot video { width:100%; height:100%; object-fit:cover; background:black; }
+    @media(max-width:700px){ #grid{grid-template-columns:1fr; grid-template-rows:1fr;} .video-slot{height:calc(100vh - 180px);} }
   </style>
 </head>
 <body>
-  <header>
-    <h1>VARIETY SHOW</h1>
-    <a href="../" class="back-btn">⬅ Back</a>
-  </header>
-
+  <h1 style="text-align:center">VARIETY SHOW</h1>
   <div id="grid"></div>
-
-  <div id="audio-controls">
-    <select id="track-select">
-      <option value="../sounds/background.mp3">background.mp3</option>
-      <option value="../sounds/background2.mp3">background2.mp3</option>
-      <option value="../sounds/background3.mp3">background3.mp3</option>
-    </select>
-    <button id="play-btn">▶ Play</button>
-  </div>
-
-  <footer>© 2025 SCOONDOG156</footer>
-
-  <audio id="bg-audio" loop></audio>
 
   <script>
     async function loadVideos() {
-      const res = await fetch("./videos.json?ts=" + Date.now());
+      const res = await fetch("./videos.json?ts="+Date.now());
       const files = await res.json();
-
       const grid = document.getElementById("grid");
-      const isMobile = window.matchMedia("(max-width: 700px)").matches;
+      const CDN = "https://cdn.scoondogmedia.net/videos/";
 
-      let pool = [...files];
-      const seenSources = new Set();
-
-      function pickClip() {
-        if (pool.length === 0) {
-          pool = [...files];
-          seenSources.clear();
-        }
-        let tries = 0, file, srcKey;
-        do {
-          const idx = Math.floor(Math.random() * pool.length);
-          file = pool.splice(idx, 1)[0];
-          srcKey = file.split("-")[0];
-          tries++;
-        } while (seenSources.has(srcKey) && tries < 10);
-        seenSources.add(srcKey);
-        return file;
-      }
-
-      const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
-
-      function loadClip(vid) {
-        const clip = pickClip();
-        const url = CDN_BASE + clip + "?t=" + Date.now();
-        vid.crossOrigin = "anonymous";
-        vid.src = url;
-        vid.load();
-
-        function start() {
-          vid.style.visibility = "visible";
-          vid.play().catch(e => console.error("Autoplay blocked:", e));
-        }
-
-        vid.oncanplay = start;
-        vid.onloadeddata = start;
-
-        vid.onerror = () => {
-          console.error("Video error:", url, vid.error);
-        };
-      }
-
-      function setupVideo(vid) {
-        loadClip(vid);
-        vid.onended = () => loadClip(vid);
-      }
-
-      if (isMobile) {
+      function makeVideo(file) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
         const vid = document.createElement("video");
@@ -174,45 +31,28 @@
         vid.muted = true;
         vid.playsInline = true;
         vid.preload = "auto";
+        // use <source>
+        const src = document.createElement("source");
+        src.src = CDN + file;
+        src.type = "video/mp4";
+        vid.appendChild(src);
         slot.appendChild(vid);
         grid.appendChild(slot);
-        setupVideo(vid);
-      } else {
-        for (let i = 0; i < 6; i++) {
-          const slot = document.createElement("div");
-          slot.className = "video-slot";
-          const vid = document.createElement("video");
-          vid.autoplay = true;
-          vid.muted = true;
-          vid.playsInline = true;
-          vid.preload = "auto";
-          slot.appendChild(vid);
-          grid.appendChild(slot);
-          setupVideo(vid);
-        }
+
+        vid.addEventListener("loadeddata", () => {
+          vid.play().catch(e=>console.log("play blocked",e));
+        });
+        vid.addEventListener("ended", () => {
+          src.src = CDN + files[Math.floor(Math.random()*files.length)];
+          vid.load();
+        });
+      }
+
+      for (let i=0; i<6; i++) {
+        makeVideo(files[Math.floor(Math.random()*files.length)]);
       }
     }
     loadVideos();
-
-    // --- AUDIO ---
-    const audio = document.getElementById("bg-audio");
-    const playBtn = document.getElementById("play-btn");
-    const trackSelect = document.getElementById("track-select");
-    audio.volume = 0.7;
-    audio.src = trackSelect.value;
-
-    playBtn.addEventListener("click", () => {
-      if (audio.paused) {
-        audio.play().then(() => playBtn.textContent = "⏸ Pause");
-      } else {
-        audio.pause(); playBtn.textContent = "▶ Play";
-      }
-    });
-    trackSelect.addEventListener("change", () => {
-      audio.src = trackSelect.value;
-      audio.play().then(() => playBtn.textContent = "⏸ Pause");
-    });
   </script>
 </body>
 </html>
-

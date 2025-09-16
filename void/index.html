@@ -14,13 +14,13 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
     }
 
     header {
       text-align: center;
       padding: .5rem;
       background: rgba(0,0,0,.7);
-      z-index: 2;
     }
     a.back-btn {
       display: inline-block;
@@ -40,16 +40,18 @@
       gap: 4px;
       padding: 4px;
     }
+
     .video-slot {
       position: relative;
       width: 100%;
+      aspect-ratio: 16 / 9;
       background: black;
       overflow: hidden;
     }
     .video-slot video {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: cover; /* desktop fills screen */
       background: black;
       display: block;
     }
@@ -61,10 +63,11 @@
         padding: 0;
       }
       .video-slot {
-        height: calc(100vh - 160px); /* header + footer space */
+        height: calc(100vh - 160px); /* leave room for header+footer */
+        aspect-ratio: auto;
       }
       .video-slot video {
-        object-fit: contain;
+        object-fit: contain; /* full clip visible on mobile */
       }
     }
 
@@ -143,7 +146,7 @@
 
       const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
 
-      function setupVideo(initialFile) {
+      function setupVideo(initialFile, forceInterval=false) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
 
@@ -153,30 +156,33 @@
         vid.playsInline = true;
         vid.preload = "auto";
 
-        const src = document.createElement("source");
-        src.src = CDN_BASE + initialFile;
-        src.type = "video/mp4";
-        vid.appendChild(src);
-
-        vid.addEventListener("loadeddata", () => {
-          console.log("Loaded:", src.src, vid.videoWidth + "x" + vid.videoHeight);
-          vid.play().catch(e => console.warn("Autoplay blocked:", e));
-        });
-
-        vid.addEventListener("ended", () => {
-          const newFile = pickClip();
-          src.src = CDN_BASE + newFile + "?t=" + Date.now(); // force refresh
+        function playClip(file) {
+          const src = CDN_BASE + file + "?t=" + Date.now();
+          vid.src = src;
           vid.load();
-          vid.play().catch(e => console.warn("Replay blocked:", e));
-        });
+          const tryPlay = () => vid.play().catch(() => setTimeout(tryPlay, 150));
+          tryPlay();
+        }
+
+        // Swap clip on end (desktop), or on timer (mobile)
+        if (forceInterval) {
+          setInterval(() => playClip(pickClip()), 5000);
+        } else {
+          vid.addEventListener("ended", () => playClip(pickClip()));
+        }
+
+        playClip(initialFile);
 
         slot.appendChild(vid);
         grid.appendChild(slot);
       }
 
-      const slots = isMobile ? 1 : 6;
-      for (let i = 0; i < slots; i++) {
-        setupVideo(pickClip());
+      if (isMobile) {
+        setupVideo(pickClip(), true); // 1 slot, auto-swap every 5s
+      } else {
+        for (let i = 0; i < 6; i++) {
+          setupVideo(pickClip());
+        }
       }
     }
     loadVideos();
@@ -203,4 +209,3 @@
   </script>
 </body>
 </html>
-

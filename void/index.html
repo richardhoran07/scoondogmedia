@@ -41,11 +41,10 @@
       padding: 4px;
     }
 
-    /* Fixed aspect ratio (16:9) video slots */
     .video-slot {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9; /* ensures all cells stay same shape */
+      aspect-ratio: 16 / 9;
       background: black;
     }
     .video-slot video {
@@ -53,11 +52,11 @@
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain; /* ✅ show full video */
+      object-fit: contain;
       background: black;
     }
 
-    /* Mobile: 1 full video filling space between header and footer */
+    /* Mobile */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
@@ -66,7 +65,7 @@
       }
       .video-slot {
         aspect-ratio: auto;
-        height: calc(100vh - 200px); /* leave room for header+controls+footer */
+        height: calc(100vh - 200px); /* leave space for header+controls+footer */
       }
       .video-slot video {
         object-fit: contain;
@@ -148,37 +147,29 @@
         return file;
       }
 
-      // --- Mobile: single video with double-buffer ---
+      // --- Mobile: single looping video ---
       if (isMobile) {
-        function setupVideo(initial = false, currentVid = null) {
-          const slot = document.createElement("div");
-          slot.className = "video-slot";
+        const slot = document.createElement("div");
+        slot.className = "video-slot";
+        grid.appendChild(slot);
 
-          const vid = document.createElement("video");
-          vid.autoplay = true;
-          vid.muted = true;
-          vid.playsInline = true;
-          vid.preload = "auto";
+        const vid = document.createElement("video");
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.preload = "auto";
+        slot.appendChild(vid);
+
+        function playNext() {
           vid.src = "./videos/" + pickClip();
-
-          const nextVid = document.createElement("video");
-          nextVid.muted = true;
-          nextVid.playsInline = true;
-          nextVid.preload = "auto";
-          nextVid.src = "./videos/" + pickClip();
-
-          vid.onended = () => {
-            slot.replaceChild(nextVid, vid);
-            setupVideo(false, nextVid);
-          };
-
-          slot.appendChild(vid);
-          if (initial) grid.appendChild(slot);
+          vid.play().catch(() => {});
         }
-        setupVideo(true);
+        vid.onended = playNext;
+        playNext();
+      }
 
-      // --- Desktop: 6 fixed slots ---
-      } else {
+      // --- Desktop: 6 slots in grid ---
+      else {
         function nextClip(video, slot) {
           const file = pickClip();
           const newVid = document.createElement("video");

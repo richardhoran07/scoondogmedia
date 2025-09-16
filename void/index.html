@@ -44,18 +44,18 @@
     video {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* default on desktop = fill */
+      object-fit: cover; /* default on desktop */
       background: black;
     }
 
-    /* Mobile rule: show entire video with black bars */
+    /* Mobile: 1×1 grid and show full frame */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
       }
       video {
-        object-fit: contain; /* full frame visible */
+        object-fit: contain; /* letterbox instead of crop */
       }
     }
 
@@ -102,12 +102,14 @@
       const files = await res.json();
 
       const grid = document.getElementById("grid");
-      const pool = [...files];
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
+
+      let pool = [...files];
       const seenSources = new Set();
 
       function pickClip() {
         if (pool.length === 0) {
-          pool.push(...files);
+          pool = [...files];
           seenSources.clear();
         }
         let tries = 0;
@@ -135,15 +137,26 @@
         };
       }
 
-      for (let i = 0; i < 9; i++) {
+      if (isMobile) {
+        // Only 1 video element on mobile
         const vid = document.createElement("video");
         vid.autoplay = true;
         vid.muted = true;
         vid.playsInline = true;
         vid.onended = () => nextClip(vid);
-        const file = pickClip();
-        vid.src = "../videos/" + file;
+        vid.src = "../videos/" + pickClip();
         grid.appendChild(vid);
+      } else {
+        // 9 videos on desktop
+        for (let i = 0; i < 9; i++) {
+          const vid = document.createElement("video");
+          vid.autoplay = true;
+          vid.muted = true;
+          vid.playsInline = true;
+          vid.onended = () => nextClip(vid);
+          vid.src = "../videos/" + pickClip();
+          grid.appendChild(vid);
+        }
       }
     }
     loadVideos();
@@ -168,3 +181,4 @@
   </script>
 </body>
 </html>
+

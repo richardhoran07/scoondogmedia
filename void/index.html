@@ -53,7 +53,7 @@
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       background: black;
     }
 
@@ -66,7 +66,7 @@
       }
       .video-slot {
         aspect-ratio: auto;
-        height: calc(100vh - 200px); /* leave space for header+controls+footer */
+        height: calc(100vh - 200px); /* space for header + controls + footer */
       }
       .video-slot video {
         object-fit: contain;
@@ -148,43 +148,39 @@
         return file;
       }
 
-      // --- Mobile: double-buffer ---
+      // --- Mobile: single video with preload ---
       if (isMobile) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
         grid.appendChild(slot);
 
-        const vid1 = document.createElement("video");
-        const vid2 = document.createElement("video");
-        [vid1, vid2].forEach(v => {
-          v.autoplay = true;
-          v.muted = true;
-          v.playsInline = true;
-          v.preload = "auto";
-          v.style.display = "none";
-          slot.appendChild(v);
-        });
-
-        let current = vid1;
-        let next = vid2;
-
-        function queueNext() {
-          next.src = "./videos/" + pickClip();
-          next.load();
-        }
+        const vid = document.createElement("video");
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.preload = "auto";
+        slot.appendChild(vid);
 
         function playNext() {
-          current.style.display = "none";
-          next.style.display = "block";
-          next.play().catch(()=>{});
-          [current, next] = [next, current]; // swap
-          queueNext();
+          const file = pickClip();
+          vid.src = "./videos/" + file;
+
+          // Preload the next clip in background
+          const nextFile = pickClip();
+          const preload = document.createElement("link");
+          preload.rel = "preload";
+          preload.as = "video";
+          preload.href = "./videos/" + nextFile;
+          document.head.appendChild(preload);
+
+          vid.onended = () => {
+            vid.src = preload.href;
+            vid.play().catch(()=>{});
+            playNext(); // preload again
+          };
         }
 
-        current.src = "./videos/" + pickClip();
-        current.style.display = "block";
-        current.onended = playNext;
-        queueNext();
+        playNext();
       }
 
       // --- Desktop: 6 slots fixed ---

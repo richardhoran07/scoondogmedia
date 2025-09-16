@@ -3,26 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Variety Show Debug</title>
+  <title>Variety Show | SCOONDOG156</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
-    body { margin:0; background:black; color:red; height:100vh; display:flex; flex-direction:column; }
-    #grid { flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:4px; }
-    .video-slot { background:black; overflow:hidden; }
-    .video-slot video { width:100%; height:100%; object-fit:cover; background:black; }
+    body {
+      margin: 0;
+      background: black;
+      color: #d61a1a;
+      font-family: 'UnifrakturCook', cursive;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: .5rem;
+      background: rgba(0,0,0,.7);
+      z-index: 2;
+    }
+    a.back-btn {
+      display: inline-block;
+      margin-top: .25rem;
+      padding: .3rem .6rem;
+      border: 2px double #d61a1a;
+      text-decoration: none;
+      color: #d61a1a;
+      font-size: 1rem;
+    }
+
+    #grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 4px;
+      padding: 4px;
+    }
+    .video-slot {
+      position: relative;
+      width: 100%;
+      background: black;
+      overflow: hidden;
+    }
+    .video-slot video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
+      display: block;
+    }
+
+    @media (max-width: 700px) {
+      #grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+        padding: 0;
+      }
+      .video-slot {
+        height: calc(100vh - 160px); /* header + footer space */
+      }
+      .video-slot video {
+        object-fit: contain;
+      }
+    }
+
+    #audio-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: .5rem;
+      padding: .5rem;
+      background: rgba(0,0,0,.7);
+    }
+    #audio-controls select, #audio-controls button {
+      background: black;
+      color: #d61a1a;
+      border: 2px solid #d61a1a;
+      padding: .2rem .4rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      font-size: .9rem;
+      padding: .5rem;
+      color: #d61a1a;
+      background: rgba(0,0,0,.7);
+    }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center">VARIETY SHOW DEBUG</h1>
+  <header>
+    <h1>VARIETY SHOW</h1>
+    <a href="../" class="back-btn">⬅ Back</a>
+  </header>
+
   <div id="grid"></div>
+
+  <div id="audio-controls">
+    <select id="track-select">
+      <option value="../sounds/background.mp3">background.mp3</option>
+      <option value="../sounds/background2.mp3">background2.mp3</option>
+      <option value="../sounds/background3.mp3">background3.mp3</option>
+    </select>
+    <button id="play-btn">▶ Play</button>
+  </div>
+
+  <footer>© 2025 SCOONDOG156</footer>
+
+  <audio id="bg-audio" loop></audio>
 
   <script>
     async function loadVideos() {
-      const res = await fetch("./videos.json?ts="+Date.now());
+      const res = await fetch("./videos.json?ts=" + Date.now());
       const files = await res.json();
       const grid = document.getElementById("grid");
-      const CDN = "https://cdn.scoondogmedia.net/videos/";
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
 
-      function makeVideo(file) {
+      let pool = [...files];
+      const seenSources = new Set();
+
+      function pickClip() {
+        if (pool.length === 0) {
+          pool = [...files];
+          seenSources.clear();
+        }
+        let file, srcKey, tries = 0;
+        do {
+          const idx = Math.floor(Math.random() * pool.length);
+          file = pool.splice(idx, 1)[0];
+          srcKey = file.split("-")[0];
+          tries++;
+        } while (seenSources.has(srcKey) && tries < 10);
+        seenSources.add(srcKey);
+        return file;
+      }
+
+      const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
+
+      function setupVideo(initialFile) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
 
@@ -33,34 +154,53 @@
         vid.preload = "auto";
 
         const src = document.createElement("source");
-        src.src = CDN + file;
+        src.src = CDN_BASE + initialFile;
         src.type = "video/mp4";
         vid.appendChild(src);
 
-        // Debug logs
         vid.addEventListener("loadeddata", () => {
-          console.log("Loaded:", src.src, "size:", vid.videoWidth+"x"+vid.videoHeight);
-          vid.play().then(()=>console.log("Playing", src.src)).catch(e=>console.warn("Play failed", e));
+          console.log("Loaded:", src.src, vid.videoWidth + "x" + vid.videoHeight);
+          vid.play().catch(e => console.warn("Autoplay blocked:", e));
         });
-        vid.addEventListener("error", (e) => {
-          console.error("Video error on", src.src, vid.error);
-        });
+
         vid.addEventListener("ended", () => {
-          console.log("Ended:", src.src);
-          const newFile = files[Math.floor(Math.random()*files.length)];
-          src.src = CDN + newFile;
+          const newFile = pickClip();
+          src.src = CDN_BASE + newFile + "?t=" + Date.now(); // force refresh
           vid.load();
+          vid.play().catch(e => console.warn("Replay blocked:", e));
         });
 
         slot.appendChild(vid);
         grid.appendChild(slot);
       }
 
-      for (let i=0; i<6; i++) {
-        makeVideo(files[Math.floor(Math.random()*files.length)]);
+      const slots = isMobile ? 1 : 6;
+      for (let i = 0; i < slots; i++) {
+        setupVideo(pickClip());
       }
     }
     loadVideos();
+
+    // --- AUDIO ---
+    const audio = document.getElementById("bg-audio");
+    const playBtn = document.getElementById("play-btn");
+    const trackSelect = document.getElementById("track-select");
+    audio.volume = 0.7;
+    audio.src = trackSelect.value;
+
+    playBtn.addEventListener("click", () => {
+      if (audio.paused) {
+        audio.play().then(() => playBtn.textContent = "⏸ Pause");
+      } else {
+        audio.pause();
+        playBtn.textContent = "▶ Play";
+      }
+    });
+    trackSelect.addEventListener("change", () => {
+      audio.src = trackSelect.value;
+      audio.play().then(() => playBtn.textContent = "⏸ Pause");
+    });
   </script>
 </body>
 </html>
+

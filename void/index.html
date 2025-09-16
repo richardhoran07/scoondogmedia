@@ -55,6 +55,7 @@
       height: 100%;
       object-fit: contain;
       background: black;
+      display: block; /* ensure it paints */
     }
 
     @media (max-width: 700px) {
@@ -153,12 +154,11 @@
         function nextClip() {
           vid.src = CDN_BASE + pickClip();
           vid.currentTime = 0;
-
           vid.onloadeddata = () => {
+            console.log("Loaded:", vid.src, vid.videoWidth, vid.videoHeight);
             vid.play().catch(e => console.log("Autoplay blocked:", e));
           };
         }
-
         vid.onended = nextClip;
         nextClip(); // start first video immediately
       }
@@ -173,7 +173,7 @@
         vid.preload = "auto";
         slot.appendChild(vid);
         grid.appendChild(slot);
-        setupVideo(vid);
+        setupVideo(vid); // after appended
       } else {
         for (let i = 0; i < 6; i++) {
           const slot = document.createElement("div");
@@ -183,9 +183,9 @@
           vid.muted = true;
           vid.playsInline = true;
           vid.preload = "auto";
-          setupVideo(vid);
           slot.appendChild(vid);
           grid.appendChild(slot);
+          setupVideo(vid); // after appended
         }
       }
     }
@@ -212,3 +212,4 @@
   </script>
 </body>
 </html>
+

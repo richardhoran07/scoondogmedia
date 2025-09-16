@@ -15,7 +15,6 @@
       flex-direction: column;
       height: 100vh;
     }
-
     header {
       text-align: center;
       padding: .5rem;
@@ -31,7 +30,6 @@
       color: #d61a1a;
       font-size: 1rem;
     }
-
     #grid {
       flex: 1;
       display: grid;
@@ -40,7 +38,6 @@
       gap: 4px;
       padding: 4px;
     }
-
     .video-slot {
       position: relative;
       width: 100%;
@@ -56,8 +53,8 @@
       object-fit: contain;
       background: black;
       display: block;
+      visibility: hidden; /* force visibility toggle when ready */
     }
-
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
@@ -69,7 +66,6 @@
         height: calc(100vh - 180px);
       }
     }
-
     #audio-controls {
       display: flex;
       justify-content: center;
@@ -86,7 +82,6 @@
       font-family: inherit;
       cursor: pointer;
     }
-
     footer {
       text-align: center;
       font-size: .9rem;
@@ -119,7 +114,7 @@
 
   <script>
     async function loadVideos() {
-      const res = await fetch("./videos.json?ts=" + Date.now()); // bust cache
+      const res = await fetch("./videos.json?ts=" + Date.now());
       const files = await res.json();
 
       const grid = document.getElementById("grid");
@@ -148,15 +143,18 @@
 
       function loadClip(vid) {
         const clip = pickClip();
-        const url = CDN_BASE + clip + "?t=" + Date.now(); // bust cache
+        const url = CDN_BASE + clip + "?t=" + Date.now();
         vid.crossOrigin = "anonymous";
         vid.src = url;
         vid.load();
 
-        vid.onloadeddata = () => {
-          console.log("Loaded:", url, "readyState:", vid.readyState);
+        function start() {
+          vid.style.visibility = "visible";
           vid.play().catch(e => console.error("Autoplay blocked:", e));
-        };
+        }
+
+        vid.oncanplay = start;
+        vid.onloadeddata = start;
 
         vid.onerror = () => {
           console.error("Video error:", url, vid.error);
@@ -217,3 +215,4 @@
   </script>
 </body>
 </html>
+

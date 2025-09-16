@@ -68,9 +68,6 @@
         aspect-ratio: auto;
         height: calc(100vh - 180px);
       }
-      .video-slot video {
-        object-fit: contain;
-      }
     }
 
     #audio-controls {
@@ -122,7 +119,7 @@
 
   <script>
     async function loadVideos() {
-      const res = await fetch("./videos.json?ts=" + Date.now()); // bust cache
+      const res = await fetch("./videos.json?ts=" + Date.now());
       const files = await res.json();
 
       const grid = document.getElementById("grid");
@@ -136,8 +133,7 @@
           pool = [...files];
           seenSources.clear();
         }
-        let tries = 0;
-        let file, srcKey;
+        let tries = 0, file, srcKey;
         do {
           const idx = Math.floor(Math.random() * pool.length);
           file = pool.splice(idx, 1)[0];
@@ -150,15 +146,19 @@
 
       const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
 
-      function setupVideo(vid) {
-        function nextClip() {
-          const clip = pickClip();
-          vid.src = CDN_BASE + clip;
-          vid.load();
+      function loadClip(vid) {
+        const clip = pickClip();
+        vid.src = CDN_BASE + clip;
+        vid.load();
+
+        vid.onloadeddata = () => {
           vid.play().catch(e => console.log("Autoplay blocked:", e));
-        }
-        vid.onended = nextClip;
-        nextClip(); // start immediately
+        };
+      }
+
+      function setupVideo(vid) {
+        loadClip(vid);
+        vid.onended = () => loadClip(vid);
       }
 
       if (isMobile) {
@@ -210,4 +210,3 @@
   </script>
 </body>
 </html>
-

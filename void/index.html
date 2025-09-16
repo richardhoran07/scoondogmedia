@@ -20,7 +20,6 @@
       text-align: center;
       padding: .5rem;
       background: rgba(0,0,0,.7);
-      z-index: 2;
     }
     a.back-btn {
       display: inline-block;
@@ -39,15 +38,17 @@
       grid-template-rows: repeat(2, 1fr);
       gap: 4px;
       padding: 4px;
+      background: black;
     }
 
     .video-slot {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
+      height: 100%;
       background: black;
       overflow: hidden;
     }
+
     .video-slot video {
       position: absolute;
       top: 0; left: 0;
@@ -55,21 +56,15 @@
       height: 100%;
       object-fit: contain;
       background: black;
-      display: block; /* ensure it paints */
+      display: block;
     }
 
+    /* Mobile: one video fills space */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
         padding: 0;
-      }
-      .video-slot {
-        aspect-ratio: auto;
-        height: calc(100vh - 200px);
-      }
-      .video-slot video {
-        object-fit: contain;
       }
     }
 
@@ -122,6 +117,7 @@
 
   <script>
     async function loadVideos() {
+      // Correct relative path to videos.json
       const res = await fetch("./videos.json");
       const files = await res.json();
 
@@ -148,19 +144,16 @@
         return file;
       }
 
-      const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
-
       function setupVideo(vid) {
         function nextClip() {
-          vid.src = CDN_BASE + pickClip();
+          const file = pickClip();
+          vid.src = "./videos/" + file;
           vid.currentTime = 0;
-          vid.onloadeddata = () => {
-            console.log("Loaded:", vid.src, vid.videoWidth, vid.videoHeight);
-            vid.play().catch(e => console.log("Autoplay blocked:", e));
-          };
+          vid.load();
+          vid.play().catch(err => console.log("Autoplay blocked:", err));
         }
         vid.onended = nextClip;
-        nextClip(); // start first video immediately
+        nextClip(); // load first clip
       }
 
       if (isMobile) {
@@ -173,7 +166,7 @@
         vid.preload = "auto";
         slot.appendChild(vid);
         grid.appendChild(slot);
-        setupVideo(vid); // after appended
+        setupVideo(vid);
       } else {
         for (let i = 0; i < 6; i++) {
           const slot = document.createElement("div");
@@ -185,13 +178,13 @@
           vid.preload = "auto";
           slot.appendChild(vid);
           grid.appendChild(slot);
-          setupVideo(vid); // after appended
+          setupVideo(vid);
         }
       }
     }
     loadVideos();
 
-    // --- AUDIO ---
+    // AUDIO
     const audio = document.getElementById("bg-audio");
     const playBtn = document.getElementById("play-btn");
     const trackSelect = document.getElementById("track-select");
@@ -212,4 +205,3 @@
   </script>
 </body>
 </html>
-

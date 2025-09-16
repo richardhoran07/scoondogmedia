@@ -6,22 +6,19 @@
   <title>Variety Show | SCOONDOG156</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root { --ink:#d61a1a; }
-
     body {
       margin: 0;
-      background: #000;
-      color: var(--ink);
+      background: black;
+      color: #d61a1a;
       font-family: 'UnifrakturCook', cursive;
       display: flex;
       flex-direction: column;
-      min-height: 100svh;   /* safe viewport on mobile */
-      overflow-x: hidden;
+      height: 100vh;
     }
 
     header {
       text-align: center;
-      padding: .5rem .75rem .25rem;
+      padding: .5rem;
       background: rgba(0,0,0,.7);
       z-index: 2;
     }
@@ -29,25 +26,14 @@
       display: inline-block;
       margin-top: .25rem;
       padding: .3rem .6rem;
-      border: 2px double var(--ink);
+      border: 2px double #d61a1a;
       text-decoration: none;
-      color: var(--ink);
+      color: #d61a1a;
       font-size: 1rem;
     }
 
-    /* Stage is the strip between header and controls/footer */
-    #stage {
-      flex: 1 0 auto;        /* don’t collapse */
-      min-height: 40vh;      /* fallback before JS computes exact height */
-      display: grid;
-      place-items: stretch;
-      background: #000;
-    }
-
-    /* The video grid */
     #grid {
-      width: 100%;
-      height: 100%;          /* JS will size #stage; grid fills it */
+      flex: 1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(2, 1fr);
@@ -57,21 +43,27 @@
     video {
       width: 100%;
       height: 100%;
-      object-fit: cover;     /* desktop default */
-      object-position: center center;
-      background: #000;
+      object-fit: cover; /* desktop default */
+      background: black;
     }
 
-    /* Mobile: one slot, always see full frame */
+    /* Mobile: 1×1 grid and fit full video */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
+        height: auto;
+        flex: 1;
       }
-      video { object-fit: contain; }
+      video {
+        object-fit: contain;
+        height: calc(100vh - 160px); /* header+footer space */
+      }
+      body {
+        overflow-y: auto;
+      }
     }
 
-    /* Audio controls + footer always visible */
     #audio-controls {
       display: flex;
       justify-content: center;
@@ -81,32 +73,30 @@
       background: rgba(0,0,0,.7);
     }
     #audio-controls select, #audio-controls button {
-      background: #000;
-      color: var(--ink);
-      border: 2px solid var(--ink);
-      padding: .2rem .5rem;
+      background: black;
+      color: #d61a1a;
+      border: 2px solid #d61a1a;
+      padding: .2rem .4rem;
       font-family: inherit;
       cursor: pointer;
     }
 
     footer {
       text-align: center;
-      color: var(--ink);
-      font-size: .85rem;
-      padding: .5rem .75rem 1rem;
+      font-size: .9rem;
+      padding: .5rem;
+      color: #d61a1a;
+      background: rgba(0,0,0,.7);
     }
   </style>
 </head>
 <body>
-  <header id="head">
+  <header>
     <h1>VARIETY SHOW</h1>
     <a href="../" class="back-btn">⬅ Back</a>
   </header>
 
-  <!-- Space that must perfectly fit between header and controls/footer -->
-  <section id="stage">
-    <div id="grid"></div>
-  </section>
+  <div id="grid"></div>
 
   <div id="audio-controls">
     <select id="track-select">
@@ -117,39 +107,13 @@
     <button id="play-btn">▶ Play</button>
   </div>
 
-  <footer id="foot">© <span id="year"></span> SCOONDOG156</footer>
+  <footer>© 2025 SCOONDOG156</footer>
 
   <audio id="bg-audio" loop></audio>
 
   <script>
-    // --- Layout: make #stage exactly fill the space between header and controls/footer
-    function sizeStage() {
-      const head = document.getElementById('head');
-      const controls = document.getElementById('audio-controls');
-      const foot = document.getElementById('foot');
-      const stage = document.getElementById('stage');
-
-      // Use innerHeight for iOS Safari correctness; fall back to documentElement
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const available = Math.max(
-        120, // guard
-        vh - head.offsetHeight - controls.offsetHeight - foot.offsetHeight
-      );
-      stage.style.height = available + 'px';
-    }
-
-    window.addEventListener('resize', sizeStage);
-    window.addEventListener('orientationchange', sizeStage);
-    if (window.visualViewport) {
-      visualViewport.addEventListener('resize', sizeStage);
-    }
-
-    // --- Video logic
     async function loadVideos() {
-      sizeStage();
-
-      // videos.json is in the same /void/ folder
-      const res = await fetch("videos.json");
+      const res = await fetch("./videos.json");
       const files = await res.json();
 
       const grid = document.getElementById("grid");
@@ -163,7 +127,8 @@
           pool = [...files];
           seenSources.clear();
         }
-        let tries = 0, file, srcKey;
+        let tries = 0;
+        let file, srcKey;
         do {
           const idx = Math.floor(Math.random() * pool.length);
           file = pool.splice(idx, 1)[0];
@@ -174,51 +139,66 @@
         return file;
       }
 
-      function nextClip(currentVideo) {
-        const file = pickClip();
-        const newVid = document.createElement("video");
-        newVid.src = "videos/" + file;       // clips live in /void/videos/
-        newVid.autoplay = true;
-        newVid.muted = true;
-        newVid.playsInline = true;
-        newVid.preload = "auto";
-        newVid.onended = () => nextClip(newVid);
-        newVid.onerror = () => nextClip(newVid);
-        // Swap only when ready -> avoids black flash
-        newVid.onloadeddata = () => {
-          if (currentVideo.isConnected && currentVideo.parentNode === grid) {
-            grid.replaceChild(newVid, currentVideo);
-          }
-        };
-      }
-
-      grid.innerHTML = "";
+      // --- Mobile double-buffering ---
       if (isMobile) {
-        // Just 1 video on mobile
-        const vid = document.createElement("video");
-        vid.autoplay = true;
-        vid.muted = true;
-        vid.playsInline = true;
-        vid.preload = "auto";
-        vid.onended = () => nextClip(vid);
-        vid.src = "videos/" + pickClip();
-        grid.appendChild(vid);
-      } else {
-        // 6 videos on desktop (2 rows × 3 columns)
-        for (let i = 0; i < 6; i++) {
+        function setupVideo(initial = false, currentVid = null) {
           const vid = document.createElement("video");
           vid.autoplay = true;
           vid.muted = true;
           vid.playsInline = true;
           vid.preload = "auto";
+          vid.style.width = "100%";
+          vid.style.height = "100%";
+          vid.style.objectFit = "contain";
+          vid.src = "./videos/" + pickClip();
+
+          // Preload next
+          const nextVid = document.createElement("video");
+          nextVid.muted = true;
+          nextVid.playsInline = true;
+          nextVid.preload = "auto";
+          nextVid.src = "./videos/" + pickClip();
+
+          vid.onended = () => {
+            grid.replaceChild(nextVid, vid);
+            setupVideo(false, nextVid);
+          };
+
+          if (initial) {
+            grid.appendChild(vid);
+          }
+        }
+        setupVideo(true);
+
+      // --- Desktop normal rotation ---
+      } else {
+        function nextClip(video) {
+          const file = pickClip();
+          const newVid = document.createElement("video");
+          newVid.src = "./videos/" + file;
+          newVid.autoplay = true;
+          newVid.muted = true;
+          newVid.playsInline = true;
+          newVid.onended = () => nextClip(newVid);
+          newVid.onloadeddata = () => {
+            grid.replaceChild(newVid, video);
+          };
+        }
+
+        for (let i = 0; i < 6; i++) {
+          const vid = document.createElement("video");
+          vid.autoplay = true;
+          vid.muted = true;
+          vid.playsInline = true;
           vid.onended = () => nextClip(vid);
-          vid.src = "videos/" + pickClip();
+          vid.src = "./videos/" + pickClip();
           grid.appendChild(vid);
         }
       }
     }
+    loadVideos();
 
-    // --- Audio controls
+    // --- AUDIO ---
     const audio = document.getElementById("bg-audio");
     const playBtn = document.getElementById("play-btn");
     const trackSelect = document.getElementById("track-select");
@@ -229,21 +209,12 @@
       if (audio.paused) {
         audio.play().then(() => playBtn.textContent = "⏸ Pause");
       } else {
-        audio.pause();
-        playBtn.textContent = "▶ Play";
+        audio.pause(); playBtn.textContent = "▶ Play";
       }
     });
     trackSelect.addEventListener("change", () => {
       audio.src = trackSelect.value;
       audio.play().then(() => playBtn.textContent = "⏸ Pause");
-    });
-
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    // Kick things off
-    window.addEventListener('load', () => {
-      sizeStage();
-      loadVideos();
     });
   </script>
 </body>

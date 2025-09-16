@@ -153,9 +153,8 @@
         function nextClip() {
           vid.src = CDN_BASE + pickClip();
           vid.currentTime = 0;
-          vid.load();
 
-          vid.oncanplay = () => {
+          vid.onloadeddata = () => {
             vid.play().catch(e => console.log("Autoplay blocked:", e));
           };
         }
@@ -213,4 +212,3 @@
   </script>
 </body>
 </html>
-

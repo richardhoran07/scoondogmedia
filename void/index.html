@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Variety Show | SCOONDOG156</title>
+  <title>Variety Show Debug</title>
   <style>
     body { margin:0; background:black; color:red; height:100vh; display:flex; flex-direction:column; }
     #grid { flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:4px; }
     .video-slot { background:black; overflow:hidden; }
     .video-slot video { width:100%; height:100%; object-fit:cover; background:black; }
-    @media(max-width:700px){ #grid{grid-template-columns:1fr; grid-template-rows:1fr;} .video-slot{height:calc(100vh - 180px);} }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center">VARIETY SHOW</h1>
+  <h1 style="text-align:center">VARIETY SHOW DEBUG</h1>
   <div id="grid"></div>
 
   <script>
@@ -26,26 +25,35 @@
       function makeVideo(file) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
+
         const vid = document.createElement("video");
         vid.autoplay = true;
         vid.muted = true;
         vid.playsInline = true;
         vid.preload = "auto";
-        // use <source>
+
         const src = document.createElement("source");
         src.src = CDN + file;
         src.type = "video/mp4";
         vid.appendChild(src);
-        slot.appendChild(vid);
-        grid.appendChild(slot);
 
+        // Debug logs
         vid.addEventListener("loadeddata", () => {
-          vid.play().catch(e=>console.log("play blocked",e));
+          console.log("Loaded:", src.src, "size:", vid.videoWidth+"x"+vid.videoHeight);
+          vid.play().then(()=>console.log("Playing", src.src)).catch(e=>console.warn("Play failed", e));
+        });
+        vid.addEventListener("error", (e) => {
+          console.error("Video error on", src.src, vid.error);
         });
         vid.addEventListener("ended", () => {
-          src.src = CDN + files[Math.floor(Math.random()*files.length)];
+          console.log("Ended:", src.src);
+          const newFile = files[Math.floor(Math.random()*files.length)];
+          src.src = CDN + newFile;
           vid.load();
         });
+
+        slot.appendChild(vid);
+        grid.appendChild(slot);
       }
 
       for (let i=0; i<6; i++) {

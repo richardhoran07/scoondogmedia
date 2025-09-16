@@ -121,7 +121,6 @@
 
   <script>
     async function loadVideos() {
-      // fetch list of filenames
       const res = await fetch("./videos.json");
       const files = await res.json();
 
@@ -148,8 +147,20 @@
         return file;
       }
 
-      // ✅ Use your Cloudflare CDN base
       const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
+
+      function setupVideo(vid) {
+        function nextClip() {
+          vid.src = CDN_BASE + pickClip();
+          vid.currentTime = 0;
+          vid.load();
+          vid.oncanplay = () => {
+            vid.play().catch(()=>{});
+          };
+        }
+        vid.onended = nextClip;
+        nextClip();
+      }
 
       if (isMobile) {
         const slot = document.createElement("div");
@@ -161,14 +172,7 @@
         vid.preload = "auto";
         slot.appendChild(vid);
         grid.appendChild(slot);
-
-        function nextClip() {
-          vid.src = CDN_BASE + pickClip();
-          vid.play().catch(()=>{});
-        }
-
-        vid.onended = nextClip;
-        nextClip();
+        setupVideo(vid);
       } else {
         for (let i = 0; i < 6; i++) {
           const slot = document.createElement("div");
@@ -178,15 +182,7 @@
           vid.muted = true;
           vid.playsInline = true;
           vid.preload = "auto";
-
-          function nextClip() {
-            vid.src = CDN_BASE + pickClip();
-            vid.play().catch(()=>{});
-          }
-
-          vid.onended = nextClip;
-          nextClip();
-
+          setupVideo(vid);
           slot.appendChild(vid);
           grid.appendChild(slot);
         }

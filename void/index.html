@@ -154,12 +154,14 @@
           vid.src = CDN_BASE + pickClip();
           vid.currentTime = 0;
           vid.load();
+
           vid.oncanplay = () => {
-            vid.play().catch(()=>{});
+            vid.play().catch(e => console.log("Autoplay blocked:", e));
           };
         }
+
         vid.onended = nextClip;
-        nextClip();
+        nextClip(); // start first video immediately
       }
 
       if (isMobile) {
@@ -211,3 +213,4 @@
   </script>
 </body>
 </html>
+

@@ -6,20 +6,22 @@
   <title>Variety Show | SCOONDOG156</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
+    :root { --ink:#d61a1a; }
+
     body {
       margin: 0;
-      background: black;
-      color: #d61a1a;
+      background: #000;
+      color: var(--ink);
       font-family: 'UnifrakturCook', cursive;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      min-height: 100svh;   /* safe viewport on mobile */
       overflow-x: hidden;
     }
 
     header {
       text-align: center;
-      padding: .5rem;
+      padding: .5rem .75rem .25rem;
       background: rgba(0,0,0,.7);
       z-index: 2;
     }
@@ -27,39 +29,49 @@
       display: inline-block;
       margin-top: .25rem;
       padding: .3rem .6rem;
-      border: 2px double #d61a1a;
+      border: 2px double var(--ink);
       text-decoration: none;
-      color: #d61a1a;
+      color: var(--ink);
       font-size: 1rem;
     }
 
+    /* Stage is the strip between header and controls/footer */
+    #stage {
+      flex: 1 0 auto;        /* don’t collapse */
+      min-height: 40vh;      /* fallback before JS computes exact height */
+      display: grid;
+      place-items: stretch;
+      background: #000;
+    }
+
+    /* The video grid */
     #grid {
-      flex: 1;
+      width: 100%;
+      height: 100%;          /* JS will size #stage; grid fills it */
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(2, 1fr);
       gap: 4px;
-      min-height: 0;
     }
 
     video {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* default desktop look */
-      background: black;
+      object-fit: cover;     /* desktop default */
+      object-position: center center;
+      background: #000;
     }
 
-    /* Mobile: 1×1 grid, full frame visible */
+    /* Mobile: one slot, always see full frame */
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
       }
-      video {
-        object-fit: contain; /* letterbox instead of crop */
-      }
+      video { object-fit: contain; }
     }
 
+    /* Audio controls + footer always visible */
     #audio-controls {
       display: flex;
       justify-content: center;
@@ -69,29 +81,32 @@
       background: rgba(0,0,0,.7);
     }
     #audio-controls select, #audio-controls button {
-      background: black;
-      color: #d61a1a;
-      border: 2px solid #d61a1a;
-      padding: .2rem .4rem;
+      background: #000;
+      color: var(--ink);
+      border: 2px solid var(--ink);
+      padding: .2rem .5rem;
       font-family: inherit;
       cursor: pointer;
     }
 
     footer {
       text-align: center;
-      color: #d61a1a;
+      color: var(--ink);
       font-size: .85rem;
-      margin: .5rem 0 1rem;
+      padding: .5rem .75rem 1rem;
     }
   </style>
 </head>
 <body>
-  <header>
+  <header id="head">
     <h1>VARIETY SHOW</h1>
     <a href="../" class="back-btn">⬅ Back</a>
   </header>
 
-  <div id="grid"></div>
+  <!-- Space that must perfectly fit between header and controls/footer -->
+  <section id="stage">
+    <div id="grid"></div>
+  </section>
 
   <div id="audio-controls">
     <select id="track-select">
@@ -102,12 +117,38 @@
     <button id="play-btn">▶ Play</button>
   </div>
 
-  <footer>© <span id="year"></span> SCOONDOG156</footer>
+  <footer id="foot">© <span id="year"></span> SCOONDOG156</footer>
 
   <audio id="bg-audio" loop></audio>
 
   <script>
+    // --- Layout: make #stage exactly fill the space between header and controls/footer
+    function sizeStage() {
+      const head = document.getElementById('head');
+      const controls = document.getElementById('audio-controls');
+      const foot = document.getElementById('foot');
+      const stage = document.getElementById('stage');
+
+      // Use innerHeight for iOS Safari correctness; fall back to documentElement
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const available = Math.max(
+        120, // guard
+        vh - head.offsetHeight - controls.offsetHeight - foot.offsetHeight
+      );
+      stage.style.height = available + 'px';
+    }
+
+    window.addEventListener('resize', sizeStage);
+    window.addEventListener('orientationchange', sizeStage);
+    if (window.visualViewport) {
+      visualViewport.addEventListener('resize', sizeStage);
+    }
+
+    // --- Video logic
     async function loadVideos() {
+      sizeStage();
+
+      // videos.json is in the same /void/ folder
       const res = await fetch("videos.json");
       const files = await res.json();
 
@@ -122,8 +163,7 @@
           pool = [...files];
           seenSources.clear();
         }
-        let tries = 0;
-        let file, srcKey;
+        let tries = 0, file, srcKey;
         do {
           const idx = Math.floor(Math.random() * pool.length);
           file = pool.splice(idx, 1)[0];
@@ -134,44 +174,51 @@
         return file;
       }
 
-      function nextClip(video) {
+      function nextClip(currentVideo) {
         const file = pickClip();
         const newVid = document.createElement("video");
-        newVid.src = "videos/" + file;
+        newVid.src = "videos/" + file;       // clips live in /void/videos/
         newVid.autoplay = true;
         newVid.muted = true;
         newVid.playsInline = true;
+        newVid.preload = "auto";
         newVid.onended = () => nextClip(newVid);
+        newVid.onerror = () => nextClip(newVid);
+        // Swap only when ready -> avoids black flash
         newVid.onloadeddata = () => {
-          grid.replaceChild(newVid, video);
+          if (currentVideo.isConnected && currentVideo.parentNode === grid) {
+            grid.replaceChild(newVid, currentVideo);
+          }
         };
       }
 
+      grid.innerHTML = "";
       if (isMobile) {
-        // Only 1 video element on mobile
+        // Just 1 video on mobile
         const vid = document.createElement("video");
         vid.autoplay = true;
         vid.muted = true;
         vid.playsInline = true;
+        vid.preload = "auto";
         vid.onended = () => nextClip(vid);
         vid.src = "videos/" + pickClip();
         grid.appendChild(vid);
       } else {
-        // 6 videos on desktop (2 rows × 3 cols)
+        // 6 videos on desktop (2 rows × 3 columns)
         for (let i = 0; i < 6; i++) {
           const vid = document.createElement("video");
           vid.autoplay = true;
           vid.muted = true;
           vid.playsInline = true;
+          vid.preload = "auto";
           vid.onended = () => nextClip(vid);
           vid.src = "videos/" + pickClip();
           grid.appendChild(vid);
         }
       }
     }
-    loadVideos();
 
-    // --- AUDIO CONTROLS ---
+    // --- Audio controls
     const audio = document.getElementById("bg-audio");
     const playBtn = document.getElementById("play-btn");
     const trackSelect = document.getElementById("track-select");
@@ -182,7 +229,8 @@
       if (audio.paused) {
         audio.play().then(() => playBtn.textContent = "⏸ Pause");
       } else {
-        audio.pause(); playBtn.textContent = "▶ Play";
+        audio.pause();
+        playBtn.textContent = "▶ Play";
       }
     });
     trackSelect.addEventListener("change", () => {
@@ -191,6 +239,12 @@
     });
 
     document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Kick things off
+    window.addEventListener('load', () => {
+      sizeStage();
+      loadVideos();
+    });
   </script>
 </body>
 </html>

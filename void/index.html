@@ -51,7 +51,7 @@
     .video-slot video {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* desktop fills screen */
+      object-fit: cover; /* desktop fills */
       background: black;
       display: block;
     }
@@ -59,15 +59,15 @@
     @media (max-width: 700px) {
       #grid {
         grid-template-columns: 1fr;
-        grid-template-rows: 1fr;
+        grid-template-rows: repeat(3, 1fr);
         padding: 0;
       }
       .video-slot {
-        height: calc(100vh - 160px); /* leave room for header+footer */
-        aspect-ratio: auto;
+        aspect-ratio: 16 / 9;
+        height: auto;
       }
       .video-slot video {
-        object-fit: contain; /* full clip visible on mobile */
+        object-fit: contain; /* whole clip visible */
       }
     }
 
@@ -146,7 +146,7 @@
 
       const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
 
-      function setupVideo(initialFile, forceInterval=false) {
+      function setupVideo(initialFile) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
 
@@ -154,7 +154,7 @@
         vid.autoplay = true;
         vid.muted = true;
         vid.playsInline = true;
-        vid.preload = "auto";
+        vid.preload = "metadata";
 
         function playClip(file) {
           const src = CDN_BASE + file + "?t=" + Date.now();
@@ -162,13 +162,16 @@
           vid.load();
           const tryPlay = () => vid.play().catch(() => setTimeout(tryPlay, 150));
           tryPlay();
-        }
 
-        // Swap clip on end (desktop), or on timer (mobile)
-        if (forceInterval) {
-          setInterval(() => playClip(pickClip()), 5000);
-        } else {
-          vid.addEventListener("ended", () => playClip(pickClip()));
+          // Preload next clip hidden
+          const nextFile = pickClip();
+          const preloader = document.createElement("video");
+          preloader.src = CDN_BASE + nextFile + "?t=" + Date.now();
+          preloader.preload = "auto";
+
+          vid.onended = () => {
+            playClip(nextFile);
+          };
         }
 
         playClip(initialFile);
@@ -178,7 +181,10 @@
       }
 
       if (isMobile) {
-        setupVideo(pickClip(), true); // 1 slot, auto-swap every 5s
+        // Mobile → show 3 stacked videos
+        for (let i = 0; i < 3; i++) {
+          setupVideo(pickClip());
+        }
       } else {
         for (let i = 0; i < 6; i++) {
           setupVideo(pickClip());
@@ -209,3 +215,4 @@
   </script>
 </body>
 </html>
+

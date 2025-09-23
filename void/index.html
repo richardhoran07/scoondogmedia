@@ -14,7 +14,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      overflow: hidden;
+      overflow-y: auto; /* allow scroll on mobile */
     }
 
     header {
@@ -49,11 +49,15 @@
       overflow: hidden;
     }
     .video-slot video {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover; /* desktop fills */
       background: black;
-      display: block;
+    }
+    .video-slot video.hidden {
+      display: none;
     }
 
     @media (max-width: 700px) {
@@ -146,46 +150,66 @@
 
       const CDN_BASE = "https://cdn.scoondogmedia.net/videos/";
 
-      function setupVideo(initialFile) {
+      function setupVideo(initialFile, forceInterval = false, stagger = 0) {
         const slot = document.createElement("div");
         slot.className = "video-slot";
 
-        const vid = document.createElement("video");
-        vid.autoplay = true;
-        vid.muted = true;
-        vid.playsInline = true;
-        vid.preload = "metadata";
+        const vidA = document.createElement("video");
+        const vidB = document.createElement("video");
+        [vidA, vidB].forEach(v => {
+          v.autoplay = true;
+          v.muted = true;
+          v.playsInline = true;
+          v.preload = "metadata";
+          v.classList.add("hidden");
+        });
+        slot.appendChild(vidA);
+        slot.appendChild(vidB);
+        grid.appendChild(slot);
 
-        function playClip(file) {
+        let active = vidA;
+        let standby = vidB;
+
+        function swapClip(file) {
           const src = CDN_BASE + file + "?t=" + Date.now();
-          vid.src = src;
-          vid.load();
-          const tryPlay = () => vid.play().catch(() => setTimeout(tryPlay, 150));
+          standby.src = src;
+          standby.load();
+          const tryPlay = () => standby.play().catch(() => setTimeout(tryPlay, 150));
           tryPlay();
 
-          // Preload next clip hidden
-          const nextFile = pickClip();
-          const preloader = document.createElement("video");
-          preloader.src = CDN_BASE + nextFile + "?t=" + Date.now();
-          preloader.preload = "auto";
-
-          vid.onended = () => {
-            playClip(nextFile);
+          standby.oncanplay = () => {
+            active.classList.add("hidden");
+            standby.classList.remove("hidden");
+            active = standby;
+            standby = (standby === vidA) ? vidB : vidA;
           };
         }
 
-        playClip(initialFile);
+        function cycle() {
+          const nextFile = pickClip();
+          swapClip(nextFile);
+        }
 
-        slot.appendChild(vid);
-        grid.appendChild(slot);
+        // Kick off
+        swapClip(initialFile);
+
+        if (forceInterval) {
+          setTimeout(() => {
+            cycle();
+            setInterval(cycle, 10000);
+          }, stagger);
+        } else {
+          active.onended = cycle;
+        }
       }
 
       if (isMobile) {
-        // Mobile → show 3 stacked videos
+        // 3 stacked videos, each forced to change every 10s, staggered
         for (let i = 0; i < 3; i++) {
-          setupVideo(pickClip());
+          setupVideo(pickClip(), true, i * 3000); // stagger 3s each
         }
       } else {
+        // 6 in desktop grid, natural swap on end
         for (let i = 0; i < 6; i++) {
           setupVideo(pickClip());
         }
@@ -215,4 +239,3 @@
   </script>
 </body>
 </html>
-

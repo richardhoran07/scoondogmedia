@@ -14,7 +14,7 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      overflow-y: auto; /* allow scrolling on mobile */
+      overflow-y: auto; /* allow scroll */
     }
 
     header {
@@ -53,13 +53,28 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      background: black;
+      object-fit: cover; /* desktop fills */
       display: none;
     }
     .video-slot video.active {
       display: block;
       z-index: 1;
+    }
+
+    /* Mobile: stack vertically */
+    @media (max-width: 700px) {
+      #grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(3, auto);
+      }
+      .video-slot {
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        height: auto;
+      }
+      .video-slot video {
+        object-fit: contain;
+      }
     }
 
     #audio-controls {
@@ -114,6 +129,7 @@
       const res = await fetch("./videos.json?ts=" + Date.now());
       const files = await res.json();
       const grid = document.getElementById("grid");
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
 
       let pool = [...files];
       const seenSources = new Set();
@@ -161,30 +177,31 @@
           standby.load();
 
           standby.oncanplay = () => {
-            // instant swap
             active.classList.remove("active");
             standby.classList.add("active");
 
-            // rotate refs
             const oldActive = active;
             active = standby;
             standby = oldActive;
 
-            // schedule next
             active.onended = () => playClip(pickClip());
 
             active.play().catch(() => {});
           };
         }
 
-        // first run
         active.classList.add("active");
         playClip(initialFile);
       }
 
-      // Always 6 slots; scroll handles smaller screens
-      for (let i = 0; i < 6; i++) {
-        setupSlot(pickClip());
+      if (isMobile) {
+        for (let i = 0; i < 3; i++) {
+          setupSlot(pickClip());
+        }
+      } else {
+        for (let i = 0; i < 6; i++) {
+          setupSlot(pickClip());
+        }
       }
     }
     loadVideos();

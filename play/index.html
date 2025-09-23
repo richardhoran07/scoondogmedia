@@ -50,166 +50,122 @@
   <button id="start-btn">Start</button>
   <canvas id="scene"></canvas>
 
-  <!-- Three.js must load first -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
-  <!-- Tone.js (UMD build, global Tone) -->
-  <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
+  <!-- Three.js must load before our code -->
+  <script src="https://unpkg.com/three@0.161.0/build/three.min.js" defer></script>
+  <!-- Tone.js UMD build -->
+  <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js" defer></script>
 
-  <!-- Our main script, deferred -->
+  <!-- Main script -->
   <script defer>
-    const startBtn = document.getElementById("start-btn");
-    const canvas = document.getElementById("scene");
+    window.addEventListener("DOMContentLoaded", () => {
+      const startBtn = document.getElementById("start-btn");
+      const canvas = document.getElementById("scene");
+      let pad, flute, drum;
+      const guySynths = [];
 
-    let pad, flute, drum;
-    const guySynths = [];
-    const particles = [];
+      startBtn.addEventListener("click", async () => {
+        try {
+          // Unlock audio first
+          await Tone.start();
+          console.log("Tone.js started");
 
-    startBtn.addEventListener("click", async () => {
-      try {
-        startBtn.style.display = "none";
-        await Tone.start();
-        initVisuals();
-        initMusic();
-      } catch (e) {
-        console.error("Error starting Tone or init:", e);
+          startBtn.style.display = "none";
+
+          initVisuals();
+          initMusic();
+        } catch (e) {
+          console.error("Error starting Tone or init:", e);
+        }
+      });
+
+      // --- MUSIC ---
+      function initMusic() {
+        const reverb = new Tone.Reverb({ decay: 6, wet: 0.4 }).toDestination();
+        const delay  = new Tone.FeedbackDelay({ delayTime: 0.25, feedback: 0.25, wet: 0.2 }).toDestination();
+        const limiter= new Tone.Limiter(-2).toDestination();
+
+        pad = new Tone.PolySynth(Tone.Synth).connect(reverb).connect(delay).connect(limiter);
+        flute = new Tone.Synth().connect(reverb).connect(limiter);
+        drum = new Tone.MembraneSynth().connect(limiter);
+
+        const notes = ["C4","E4","G4","B4","A3","F4"];
+        const fluteNotes = ["C5","D5","E5","G5","A5"];
+
+        new Tone.Loop(time => {
+          pad.triggerAttackRelease(notes[Math.floor(Math.random()*notes.length)], "2n", time);
+        }, "2n").start(0);
+
+        new Tone.Loop(time => {
+          flute.triggerAttackRelease(fluteNotes[Math.floor(Math.random()*fluteNotes.length)], "4n", time);
+        }, "4n").start("2n");
+
+        new Tone.Loop(time => {
+          drum.triggerAttackRelease("C2", "8n", time);
+        }, "2n").start(0);
+
+        Tone.Transport.start();
+      }
+
+      // --- VISUALS ---
+      function initVisuals() {
+        if (typeof THREE === "undefined") {
+          console.error("THREE is not defined – check the script src");
+          return;
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.z = 10;
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const light = new THREE.PointLight(0xffffff, 1.2);
+        light.position.set(5,5,5);
+        scene.add(light);
+
+        const groundY = -3;
+        const ground = new THREE.Mesh(
+          new THREE.PlaneGeometry(20, 20),
+          new THREE.MeshPhongMaterial({ color: 0x88cc88, side: THREE.DoubleSide })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = groundY;
+        scene.add(ground);
+
+        const objects = [];
+        for (let i=0; i<10; i++) {
+          const geom = new THREE.SphereGeometry(0.6 + Math.random()*0.4, 32, 32);
+          const mesh = new THREE.Mesh(geom, new THREE.MeshPhongMaterial({ color: new THREE.Color().setHSL(Math.random(),0.7,0.6) }));
+          mesh.position.set((Math.random()-0.5)*8, Math.random()*4, (Math.random()-0.5)*5);
+          mesh.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.05, 0, (Math.random()-0.5)*0.05);
+          mesh.userData.yVel = 0;
+          scene.add(mesh);
+          objects.push(mesh);
+        }
+
+        function animate() {
+          requestAnimationFrame(animate);
+          objects.forEach(obj => {
+            obj.userData.yVel -= 0.002;
+            obj.position.y += obj.userData.yVel;
+            if (obj.position.y - 0.6 <= groundY) {
+              obj.position.y = groundY + 0.6;
+              obj.userData.yVel *= -0.7;
+            }
+            obj.position.add(obj.userData.vel);
+          });
+          renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener("resize", () => {
+          camera.aspect = window.innerWidth/window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
       }
     });
-
-    // --- MUSIC ---
-    function initMusic() {
-      const reverb = new Tone.Reverb({ decay: 6, wet: 0.4 }).toDestination();
-      const delay  = new Tone.FeedbackDelay({ delayTime: 0.25, feedback: 0.25, wet: 0.2 }).toDestination();
-      const limiter= new Tone.Limiter(-2).toDestination();
-
-      pad = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: 'sine' },
-        envelope: { attack: 2, decay: 1.5, sustain: 0.6, release: 4 }
-      }).connect(reverb).connect(delay).connect(limiter);
-
-      flute = new Tone.Synth({
-        oscillator: { type: 'sine' },
-        portamento: 0.02,
-        envelope: { attack: 0.02, decay: 0.3, sustain: 0.2, release: 0.6 }
-      }).connect(reverb).connect(limiter);
-
-      drum = new Tone.MembraneSynth({
-        pitchDecay: 0.02,
-        octaves: 4,
-        envelope: { attack: 0.001, decay: 0.35, sustain: 0, release: 0.15 }
-      }).connect(limiter);
-
-      const notes = ["C4","E4","G4","B4","A3","F4"];
-      const fluteNotes = ["C5","D5","E5","G5","A5"];
-
-      new Tone.Loop(time => {
-        pad.triggerAttackRelease(notes[Math.floor(Math.random()*notes.length)], "2n", time);
-      }, "2n").start(0);
-
-      new Tone.Loop(time => {
-        flute.triggerAttackRelease(fluteNotes[Math.floor(Math.random()*fluteNotes.length)], "4n", time);
-      }, "4n").start("2n");
-
-      new Tone.Loop(time => {
-        drum.triggerAttackRelease("C2", "8n", time);
-      }, "2n").start(0);
-
-      Tone.Transport.start();
-    }
-
-    // --- VISUALS ---
-    function initVisuals() {
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-      camera.position.z = 10;
-
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-
-      const light = new THREE.PointLight(0xffffff, 1.2);
-      light.position.set(5,5,5);
-      scene.add(light);
-
-      const groundY = -3;
-      const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(20, 20),
-        new THREE.MeshPhongMaterial({ color: 0x88cc88, side: THREE.DoubleSide })
-      );
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.y = groundY;
-      scene.add(ground);
-
-      const objects = [];
-      const guys = [];
-
-      // bouncing balls
-      for (let i=0; i<10; i++) {
-        const geom = new THREE.SphereGeometry(0.6 + Math.random()*0.4, 32, 32);
-        const mesh = new THREE.Mesh(geom, new THREE.MeshPhongMaterial({ color: new THREE.Color().setHSL(Math.random(),0.7,0.6) }));
-        mesh.position.set((Math.random()-0.5)*8, Math.random()*4, (Math.random()-0.5)*5);
-        mesh.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.05, 0, (Math.random()-0.5)*0.05);
-        mesh.userData.yVel = 0;
-        scene.add(mesh);
-        objects.push(mesh);
-      }
-
-      // little guys
-      const guyColors = [0xff6666,0x66ff66,0x6666ff,0xffff66,0xff66ff];
-      const guyNotes  = [["C5","E5","G5"],["A4","C5","E5"],["F4","A4","C5"],["G4","B4","D5"],["D5","F5","A5"]];
-      for (let i=0; i<5; i++) {
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,1,16), new THREE.MeshPhongMaterial({color:guyColors[i]}));
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.35,16,16), new THREE.MeshPhongMaterial({color:0xffddaa}));
-        head.position.y = 0.7;
-        const group = new THREE.Group();
-        group.add(body);
-        group.add(head);
-        group.position.set((Math.random()-0.5)*8, 0, (Math.random()-0.5)*5);
-        group.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.02,0,(Math.random()-0.5)*0.02);
-        group.userData.yVel = 0;
-        scene.add(group);
-        guys.push(group);
-
-        guySynths.push({
-          synth: new Tone.Synth({
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.3 }
-          }).toDestination(),
-          notes: guyNotes[i]
-        });
-      }
-
-      function animate() {
-        requestAnimationFrame(animate);
-
-        objects.forEach(obj => {
-          obj.userData.yVel -= 0.002;
-          obj.position.y += obj.userData.yVel;
-          if (obj.position.y - 0.6 <= groundY) {
-            obj.position.y = groundY + 0.6;
-            obj.userData.yVel *= -0.7;
-          }
-          obj.position.add(obj.userData.vel);
-        });
-
-        guys.forEach(guy => {
-          guy.userData.yVel -= 0.0015;
-          guy.position.y += guy.userData.yVel;
-          if (guy.position.y <= groundY) {
-            guy.position.y = groundY;
-            guy.userData.yVel = 0;
-          }
-          guy.position.add(guy.userData.vel);
-        });
-
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth/window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    }
   </script>
 </body>
 </html>

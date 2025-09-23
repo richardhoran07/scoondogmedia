@@ -63,7 +63,8 @@
     startBtn.addEventListener("click", async () => {
       try {
         startBtn.style.display = "none";
-        await Tone.start();  // unlock audio
+        // ✅ unlock audio context for ESM build
+        await Tone.context.resume();
         initVisuals();
         initMusic();
       } catch (e) {

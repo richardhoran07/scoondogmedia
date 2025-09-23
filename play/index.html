@@ -11,10 +11,6 @@
       font-family: 'UnifrakturCook', cursive;
       overflow: hidden;
       height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
     #back-btn {
       position: absolute;
@@ -29,6 +25,10 @@
       z-index: 10;
     }
     #start-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       padding: 1rem 2rem;
       border: 3px solid #000;
       background: #fff;
@@ -41,6 +41,7 @@
       display: block;
       width: 100%;
       height: 100%;
+      z-index: 1;
     }
   </style>
 </head>
@@ -49,10 +50,12 @@
   <button id="start-btn">Start</button>
   <canvas id="scene"></canvas>
 
-  <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
-    import * as Tone from "https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js";
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+  <!-- Tone.js (UMD build, global Tone) -->
+  <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
 
+  <script>
     const startBtn = document.getElementById("start-btn");
     const canvas = document.getElementById("scene");
 
@@ -63,8 +66,7 @@
     startBtn.addEventListener("click", async () => {
       try {
         startBtn.style.display = "none";
-        // ✅ unlock audio context for ESM build
-        await Tone.context.resume();
+        await Tone.start();
         initVisuals();
         initMusic();
       } catch (e) {
@@ -74,9 +76,9 @@
 
     // --- MUSIC ---
     function initMusic() {
-      const reverb = Tone.Reverb({ decay: 6, wet: 0.4 }).toDestination();
-      const delay  = Tone.FeedbackDelay({ delayTime: 0.25, feedback: 0.25, wet: 0.2 }).toDestination();
-      const limiter= Tone.Limiter(-2).toDestination();
+      const reverb = new Tone.Reverb({ decay: 6, wet: 0.4 }).toDestination();
+      const delay  = new Tone.FeedbackDelay({ delayTime: 0.25, feedback: 0.25, wet: 0.2 }).toDestination();
+      const limiter= new Tone.Limiter(-2).toDestination();
 
       pad = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'sine' },
@@ -126,6 +128,16 @@
       light.position.set(5,5,5);
       scene.add(light);
 
+      // ground plane
+      const groundY = -3;
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshPhongMaterial({ color: 0x88cc88, side: THREE.DoubleSide })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = groundY;
+      scene.add(ground);
+
       const objects = [];
       const guys = [];
 
@@ -133,8 +145,9 @@
       for (let i=0; i<10; i++) {
         const geom = new THREE.SphereGeometry(0.6 + Math.random()*0.4, 32, 32);
         const mesh = new THREE.Mesh(geom, new THREE.MeshPhongMaterial({ color: new THREE.Color().setHSL(Math.random(),0.7,0.6), shininess: 80 }));
-        mesh.position.set((Math.random()-0.5)*8, (Math.random()-0.5)*5, (Math.random()-0.5)*5);
-        mesh.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.05, (Math.random()-0.5)*0.05, (Math.random()-0.5)*0.05);
+        mesh.position.set((Math.random()-0.5)*8, Math.random()*4, (Math.random()-0.5)*5);
+        mesh.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.05, 0, (Math.random()-0.5)*0.05);
+        mesh.userData.yVel = 0;
         scene.add(mesh);
         objects.push(mesh);
       }
@@ -151,6 +164,7 @@
         group.add(head);
         group.position.set((Math.random()-0.5)*8, 0, (Math.random()-0.5)*5);
         group.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.02,0,(Math.random()-0.5)*0.02);
+        group.userData.yVel = 0;
         scene.add(group);
         guys.push(group);
 
@@ -179,10 +193,21 @@
         requestAnimationFrame(animate);
 
         objects.forEach(obj => {
+          // gravity
+          obj.userData.yVel -= 0.002;
+          obj.position.y += obj.userData.yVel;
+
+          // ground bounce
+          if (obj.position.y - 0.6 <= groundY) {
+            obj.position.y = groundY + 0.6;
+            obj.userData.yVel *= -0.7;
+            drum.triggerAttackRelease("C2","8n");
+          }
+
           obj.position.add(obj.userData.vel);
-          if (Math.abs(obj.position.x) > 5) { obj.userData.vel.x *= -1; flute.triggerAttackRelease("C5","8n"); }
-          if (Math.abs(obj.position.y) > 3) { obj.userData.vel.y *= -1; drum.triggerAttackRelease("C2","8n"); }
-          if (Math.abs(obj.position.z) > 4) { obj.userData.vel.z *= -1; }
+          if (Math.abs(obj.position.x) > 5) obj.userData.vel.x *= -1;
+          if (Math.abs(obj.position.z) > 4) obj.userData.vel.z *= -1;
+
           obj.rotation.x += 0.01;
           obj.rotation.y += 0.01;
 
@@ -191,24 +216,24 @@
               const { synth, notes } = guySynths[gi];
               synth.triggerAttackRelease(notes[Math.floor(Math.random()*notes.length)],"8n");
               spawnParticles(guy.position,guy.children[0].material.color);
-              guy.position.y = Math.random()*0.5;
+              guy.userData.yVel = 0.1;
             }
           });
         });
 
         guys.forEach(guy => {
+          guy.userData.yVel -= 0.0015;
+          guy.position.y += guy.userData.yVel;
+          if (guy.position.y <= groundY) {
+            guy.position.y = groundY;
+            guy.userData.yVel = 0;
+          }
+
           guy.position.add(guy.userData.vel);
           if (Math.abs(guy.position.x) > 5) guy.userData.vel.x *= -1;
           if (Math.abs(guy.position.z) > 4) guy.userData.vel.z *= -1;
-          guy.rotation.z = Math.sin(Date.now()/300) * 0.1;
 
-          if (Math.random()<0.002) {
-            guy.position.y += 0.5;
-            const gi = guys.indexOf(guy);
-            const { synth, notes } = guySynths[gi];
-            synth.triggerAttackRelease(notes[Math.floor(Math.random()*notes.length)],"8n");
-          }
-          if (guy.position.y>0) guy.position.y -= 0.02;
+          guy.rotation.z = Math.sin(Date.now()/300) * 0.1;
         });
 
         for (let i=particles.length-1;i>=0;i--) {
